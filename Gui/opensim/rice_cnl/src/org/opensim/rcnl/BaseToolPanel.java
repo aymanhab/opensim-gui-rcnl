@@ -84,7 +84,7 @@ public abstract class BaseToolPanel extends JPanel implements ActionListener, Ob
    protected Dialog ownerDialog = null;
    protected boolean cleanupAfterExecuting = false;  // Keep track if cleaning up needs to be done on execution finish vs. dialog close
 
-    String stripOuterTags(String nmsmFilename) {
+   static String stripOuterTags(String nmsmFilename) {
        try {
            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
            DocumentBuilder builder = dbf.newDocumentBuilder();
@@ -97,7 +97,11 @@ public abstract class BaseToolPanel extends JPanel implements ActionListener, Ob
            
            // get all child nodes
            NodeList nodes = element.getChildNodes();
-           String osimFile = nmsmFilename.replace(".xml", "osim.xml");
+           int lastDotLocation  = nmsmFilename.lastIndexOf(".");
+           String extension="";
+           if (lastDotLocation!=-1)
+                extension = nmsmFilename.substring(lastDotLocation);
+           String osimFile = nmsmFilename.replace(extension, "osim"+extension);
            TransformerFactory transformerFactory = TransformerFactory.newInstance();
            Transformer transformer = transformerFactory.newTransformer();
            DOMSource source = new DOMSource(nodes.item(1));

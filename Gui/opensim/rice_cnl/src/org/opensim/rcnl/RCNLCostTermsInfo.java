@@ -222,7 +222,7 @@ public class RCNLCostTermsInfo {
         ArrayStr availableForcesArr = new ArrayStr();
         String[] availableMoments;
         ArrayStr availableMomentsArr = new ArrayStr();
-        OpenSimObject osimXModelAsObject = OpenSimObject.makeObjectFromFile(osimxFile);
+        OpenSimObject osimXModelAsObject = OpenSimObject.makeObjectFromFile(BaseToolPanel.stripOuterTags(osimxFile));
         // Find RCNLContactSurface/force_columns or moment_columns and aggregate
         PropertyObjectList contactSurfaceList = PropertyObjectList.updAs(osimXModelAsObject.updPropertyByName("RCNLContactSurfaceSet"));
         // for each RCNLContactSurface in the set append force_set to availableForcesArr, same for moments
