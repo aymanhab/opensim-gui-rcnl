@@ -753,6 +753,22 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
 
     private void deleteConstraintTermButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteConstraintTermButtonActionPerformed
         // TODO add your handling code here:
+        int[] sels = jConstraintTermList.getSelectedIndices();
+        PropertyObjectList poList = treatmentOptimizationToolModel.getConstraintTermListAsObjectList();
+        Vector<Integer> tasksToDelete = new Vector<Integer>();
+        for (int i=0; i<sels.length; i++){
+            //OpenSimObject selectedJointTask = (OpenSimObject)jJointPersonalizationList.get(sels[i]);
+            tasksToDelete.add(sels[i]);
+        }
+        //jJointPersonalizationList
+        // Delete items from jmpJointListModel in reverse order
+        for (int r=tasksToDelete.size(); r >0; r-- ){
+            constraintTermListModel.remove(tasksToDelete.get(r-1));
+            poList.removeValueAtIndex(tasksToDelete.get(r-1));
+        }
+        // Recreate list model to cleanup
+        constraintTermListModel = new ConstraintTermListModel(poList);
+        jConstraintTermList.setModel(constraintTermListModel);
     }//GEN-LAST:event_deleteConstraintTermButtonActionPerformed
 
     private void editConstraintTermButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_editConstraintTermButtonActionPerformed
