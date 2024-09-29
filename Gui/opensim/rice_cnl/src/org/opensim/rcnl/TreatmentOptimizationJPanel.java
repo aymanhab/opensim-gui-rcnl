@@ -979,6 +979,9 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
        
        // Cost+Constraints
        costTermListModel = new CostTermListModel(treatmentOptimizationToolModel.getCostTermListAsObjectList());
+       jCostTermList.setModel(costTermListModel);
+       constraintTermListModel = new ConstraintTermListModel(treatmentOptimizationToolModel.getConstraintTermListAsObjectList());
+       jConstraintTermList.setModel(constraintTermListModel);
     }  
 
     @Override
