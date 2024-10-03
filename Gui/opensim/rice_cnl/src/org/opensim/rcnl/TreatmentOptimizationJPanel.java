@@ -252,6 +252,11 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
 
         buttonGroup1.add(jRadioButton2);
         org.openide.awt.Mnemonics.setLocalizedText(jRadioButton2, org.openide.util.NbBundle.getMessage(TreatmentOptimizationJPanel.class, "TreatmentOptimizationJPanel.jRadioButton2.text")); // NOI18N
+        jRadioButton2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jRadioButton2ActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jSolverSettingsPanelLayout = new javax.swing.GroupLayout(jSolverSettingsPanel);
         jSolverSettingsPanel.setLayout(jSolverSettingsPanelLayout);
@@ -941,6 +946,15 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
         // TODO add your handling code here:
         treatmentOptimizationToolModel.setOptimizeSynergyVector(jOptimizeSynVecCheckBox.isSelected());
     }//GEN-LAST:event_jOptimizeSynVecCheckBoxActionPerformed
+
+    private void jRadioButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jRadioButton2ActionPerformed
+        // TODO add your handling code here:
+        OpenSimObject settingsAsObject = OpenSimObject.newInstanceOfType("OptimalControlSolverSettings");
+        OpenSimObject.setSerializeAllDefaults(true);
+        settingsAsObject.print("defaultSolverSettings.xml");
+        OpenSimObject.setSerializeAllDefaults(false);
+        treatmentOptimizationToolModel.setOCSettingsFile("defaultSolverSettings.xml");
+    }//GEN-LAST:event_jRadioButton2ActionPerformed
 
     @Override
     public void update(Observable o, Object o1) {
