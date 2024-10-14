@@ -13,12 +13,14 @@ import java.util.Vector;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.filechooser.FileFilter;
 import org.openide.DialogDescriptor;
 import org.openide.DialogDisplayer;
 import org.opensim.modeling.AbstractProperty;
 import org.opensim.modeling.Model;
 import org.opensim.modeling.OpenSimObject;
 import org.opensim.modeling.PropertyObjectList;
+import org.opensim.utils.FileUtils;
 import org.opensim.view.pub.OpenSimDB;
 
 /**
@@ -338,12 +340,9 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
                     .addComponent(jLabel6))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(inputModelPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(inputModelPanelLayout.createSequentialGroup()
-                        .addGroup(inputModelPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(osimxFilePath, javax.swing.GroupLayout.PREFERRED_SIZE, 708, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(trackedQuantitiesDirPath, javax.swing.GroupLayout.PREFERRED_SIZE, 711, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(InitialGuessDirPath, javax.swing.GroupLayout.PREFERRED_SIZE, 711, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(0, 0, 0))
+                    .addComponent(osimxFilePath, javax.swing.GroupLayout.PREFERRED_SIZE, 708, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(trackedQuantitiesDirPath, javax.swing.GroupLayout.PREFERRED_SIZE, 711, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(InitialGuessDirPath, javax.swing.GroupLayout.PREFERRED_SIZE, 711, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(currentModelFileTextField, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
         );
 
@@ -951,9 +950,14 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
         // TODO add your handling code here:
         OpenSimObject settingsAsObject = OpenSimObject.newInstanceOfType("OptimalControlSolverSettings");
         OpenSimObject.setSerializeAllDefaults(true);
-        settingsAsObject.print("defaultSolverSettings.xml");
+        FileFilter settingsFilter = FileUtils.getFileFilter(".xml", "Optimal Control Solver Settings");
+        String fileName = FileUtils.getInstance().browseForFilenameToSave(settingsFilter, true, "", null);
+        if(fileName!=null) {
+            String fullFilename = FileUtils.addExtensionIfNeeded(fileName, ".xml");
+            settingsAsObject.print(fullFilename);
+            treatmentOptimizationToolModel.setOCSettingsFile(fullFilename);
+        }
         OpenSimObject.setSerializeAllDefaults(false);
-        treatmentOptimizationToolModel.setOCSettingsFile("defaultSolverSettings.xml");
     }//GEN-LAST:event_jRadioButton2ActionPerformed
 
     @Override
