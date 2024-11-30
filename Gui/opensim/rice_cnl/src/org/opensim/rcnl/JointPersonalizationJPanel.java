@@ -312,7 +312,7 @@ public class JointPersonalizationJPanel extends BaseToolPanel  implements Observ
 
     @Override
     public void loadSettings(String nmsmFilename) {
-        String fileName = super.stripOuterTags(nmsmFilename);
+        String fileName = BaseToolPanel.stripOuterTags(nmsmFilename);
         Model model = OpenSimDB.getInstance().getCurrentModel();
        //if(model==null) throw new IOException("JointPersonalizationJPanel got null model");
        jointPersonalizationToolModel = new JointPersonalizationToolModel(model, fileName);
