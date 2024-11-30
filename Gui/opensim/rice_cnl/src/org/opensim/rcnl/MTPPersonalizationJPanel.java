@@ -701,8 +701,9 @@ public class MTPPersonalizationJPanel extends BaseToolPanel  implements Observer
     // End of variables declaration//GEN-END:variables
 
     @Override
-    String getToolXML() {
-        return mtpPersonalizationToolModel.getToolAsObject().dump();
+    public void saveSettings(String fileName) {
+        String fullFilename = FileUtils.addExtensionIfNeeded(fileName, ".xml");
+        mtpPersonalizationToolModel.getToolAsObject().print(fullFilename);
+        replaceOpenSimDocumentTags(fullFilename);
     }
-
 }

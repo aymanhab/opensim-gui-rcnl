@@ -6,6 +6,8 @@
 package org.opensim.rcnl;
 
 import java.awt.Dialog;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Observable;
 import java.util.Observer;
@@ -16,6 +18,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileFilter;
 import org.openide.DialogDescriptor;
 import org.openide.DialogDisplayer;
+import org.openide.util.Exceptions;
 import org.opensim.modeling.AbstractProperty;
 import org.opensim.modeling.Model;
 import org.opensim.modeling.OpenSimObject;
@@ -971,11 +974,6 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
     }
 
     @Override
-    public String getToolXML() {
-        return treatmentOptimizationToolModel.getToolAsObject().dump();
-    }
-
-    @Override
     public void loadSettings(String nmsmFilename) {
         String fileName = super.stripOuterTags(nmsmFilename);
         Model model = OpenSimDB.getInstance().getCurrentModel();
@@ -1096,5 +1094,11 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
             deleteConstraintTermButton.setEnabled(sels.length>=1);
         }
     }
+    @Override
+    public void saveSettings(String fileName) {
+         String fullFilename = FileUtils.addExtensionIfNeeded(fileName, ".xml");
+         treatmentOptimizationToolModel.getToolAsObject().print(fullFilename);
+         replaceOpenSimDocumentTags(fullFilename);
+   }
 
 }

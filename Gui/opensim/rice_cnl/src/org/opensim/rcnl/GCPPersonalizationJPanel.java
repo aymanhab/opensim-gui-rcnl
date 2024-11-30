@@ -418,11 +418,6 @@ public class GCPPersonalizationJPanel extends BaseToolPanel  implements Observer
     }
 
     @Override
-    String getToolXML() {
-        return gcpPersonalizationToolModel.getToolAsObject().dump();
-    }
-
-    @Override
     public void loadSettings(String nmsmFilename) {
         String fileName = super.stripOuterTags(nmsmFilename);
         Model model = OpenSimDB.getInstance().getCurrentModel();
@@ -453,9 +448,8 @@ public class GCPPersonalizationJPanel extends BaseToolPanel  implements Observer
     }
 
     @Override
-    public void saveSettings(String fileName, String contents) {
+    public void saveSettings(String fileName) {
         
-        String adjustedContents = contents;
         // Before saving the settings, we need to make motion file and grf file relative to input_directory
         String inputDir = gcpPersonalizationToolModel.getDataDir();
         String saveInputMotion = gcpPersonalizationToolModel.getInputMotionFile();
@@ -469,10 +463,11 @@ public class GCPPersonalizationJPanel extends BaseToolPanel  implements Observer
             String relativeGRFFile = FileUtils.makePathRelative(saveGRFfile, inputDir);
             if (relativeGRFFile != null)
                 gcpPersonalizationToolModel.setInputGRFFile(relativeGRFFile);
-            adjustedContents = getToolXML();
         }
         // Set proprties from relative path
-        super.saveSettings(fileName, adjustedContents); //To change body of generated methods, choose Tools | Templates.
+        String fullFilename = FileUtils.addExtensionIfNeeded(fileName, ".xml");
+        gcpPersonalizationToolModel.getToolAsObject().print(fullFilename);
+        replaceOpenSimDocumentTags(fullFilename);
         // Restore from model
         gcpPersonalizationToolModel.setInputMotionFile(saveInputMotion);
         gcpPersonalizationToolModel.setInputGRFFile(saveGRFfile);

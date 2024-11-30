@@ -633,8 +633,10 @@ public class NCPPersonalizationJPanel extends BaseToolPanel  implements Observer
     // End of variables declaration//GEN-END:variables
 
     @Override
-    String getToolXML() {
-        return ncpPersonalizationToolModel.getToolAsObject().dump();
+    public void saveSettings(String fileName) {
+        String fullFilename = FileUtils.addExtensionIfNeeded(fileName, ".xml");
+        ncpPersonalizationToolModel.getToolAsObject().print(fullFilename);
+        replaceOpenSimDocumentTags(fullFilename);
     }
 
 }
