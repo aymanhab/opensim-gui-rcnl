@@ -1097,8 +1097,22 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
     @Override
     public void saveSettings(String fileName) {
          String fullFilename = FileUtils.addExtensionIfNeeded(fileName, ".xml");
-         treatmentOptimizationToolModel.getToolAsObject().print(fullFilename);
-         replaceOpenSimDocumentTags(fullFilename);
+        OpenSimObject obj = treatmentOptimizationToolModel.getToolAsObject();
+        forceWritableProperties(obj);
+        obj.print(fullFilename);
+        replaceOpenSimDocumentTags(fullFilename);
    }
 
+    @Override
+    void forceWritableProperties(OpenSimObject dObject) {
+        super.forceWritableProperties(dObject); //To change body of generated methods, choose Tools | Templates.
+        AbstractProperty ap = dObject.getPropertyByName("RCNLCostTermSet");
+        PropertyObjectList olist = PropertyObjectList.getAs(ap);
+        for (int i=0; i< olist.size(); i++){
+            OpenSimObject costterm = olist.getValue(i);
+            costterm.updPropertyByName("max_allowable_error").setValueIsDefault(false);
+        }
+    }
+
+    
 }

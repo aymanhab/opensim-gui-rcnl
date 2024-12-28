@@ -703,7 +703,18 @@ public class MTPPersonalizationJPanel extends BaseToolPanel  implements Observer
     @Override
     public void saveSettings(String fileName) {
         String fullFilename = FileUtils.addExtensionIfNeeded(fileName, ".xml");
-        mtpPersonalizationToolModel.getToolAsObject().print(fullFilename);
+        OpenSimObject obj = mtpPersonalizationToolModel.getToolAsObject();
+        forceWritableProperties(obj);
+        obj.print(fullFilename);
         replaceOpenSimDocumentTags(fullFilename);
     }
+
+    @Override
+    void forceWritableProperties(OpenSimObject dObject) {
+        super.forceWritableProperties(dObject); //To change body of generated methods, choose Tools | Templates.
+        dObject.updPropertyByName("MuscleTendonLengthInitialization").setValueIsDefault(false);
+        dObject.updPropertyByName("MTPSynergyExtrapolation").setValueIsDefault(false);
+    }
+    
+    
 }

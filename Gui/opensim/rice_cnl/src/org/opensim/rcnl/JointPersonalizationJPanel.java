@@ -306,7 +306,9 @@ public class JointPersonalizationJPanel extends BaseToolPanel  implements Observ
     @Override
     public void saveSettings(String fileName) {
         String fullFilename = FileUtils.addExtensionIfNeeded(fileName, ".xml");
-        jointPersonalizationToolModel.getToolAsObject().print(fullFilename);
+        OpenSimObject obj = jointPersonalizationToolModel.getToolAsObject();
+        forceWritableProperties(obj);
+        obj.print(fullFilename);
         replaceOpenSimDocumentTags(fullFilename);
     }
 
@@ -331,6 +333,24 @@ public class JointPersonalizationJPanel extends BaseToolPanel  implements Observ
     @Override
     public void setSettingsFileDescription(String description) {
         super.setSettingsFileDescription(description); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    void forceWritableProperties(OpenSimObject dObject) {
+        super.forceWritableProperties(dObject); //To change body of generated methods, choose Tools | Templates.
+        // For each JMPTask in tasklist, force write of parent_frame_transformation, child_frame_transformation
+        // dObject is an instance of JointModelPersonalizationTool
+        AbstractProperty ap = dObject.getPropertyByName("JMPTaskList");
+        PropertyObjectList olist = PropertyObjectList.getAs(ap);
+        for (int i=0; i< olist.size(); i++){
+            OpenSimObject ithTask = olist.getValue(i);
+            AbstractProperty apJnts = ithTask.getPropertyByName("JMPJointSet");
+            PropertyObjectList poJointList = PropertyObjectList.updAs(apJnts);
+             for (int j=0; j<poJointList.size(); j++){
+                poJointList.getValue(j).updPropertyByName("parent_frame_transformation").setValueIsDefault(false);
+                poJointList.getValue(j).updPropertyByName("child_frame_transformation").setValueIsDefault(false);
+             }
+        }
     }
 
 

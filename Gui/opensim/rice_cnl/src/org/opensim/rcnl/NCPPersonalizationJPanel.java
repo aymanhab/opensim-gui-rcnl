@@ -635,8 +635,16 @@ public class NCPPersonalizationJPanel extends BaseToolPanel  implements Observer
     @Override
     public void saveSettings(String fileName) {
         String fullFilename = FileUtils.addExtensionIfNeeded(fileName, ".xml");
-        ncpPersonalizationToolModel.getToolAsObject().print(fullFilename);
+        OpenSimObject obj = ncpPersonalizationToolModel.getToolAsObject();
+        forceWritableProperties(obj);
+        obj.print(fullFilename);
         replaceOpenSimDocumentTags(fullFilename);
+    }
+
+    @Override
+    void forceWritableProperties(OpenSimObject dObject) {
+        super.forceWritableProperties(dObject); //To change body of generated methods, choose Tools | Templates.
+        dObject.updPropertyByName("MuscleTendonLengthInitialization").setValueIsDefault(false);
     }
 
 }

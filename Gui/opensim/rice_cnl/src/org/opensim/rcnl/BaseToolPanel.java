@@ -166,6 +166,10 @@ public abstract class BaseToolPanel extends JPanel implements ActionListener, Ob
     //------------------------------------------------------------------------
     // Load/Save Settings Actions
     //------------------------------------------------------------------------
+    // Override this method to change behavior of writing properties only if different from default
+    // Per issue #40 https://github.com/aymanhab/opensim-gui-rcnl/issues/40
+    void forceWritableProperties(OpenSimObject dObject) {
+    }
 
     class LoadSettingsAction extends AbstractAction {
 
