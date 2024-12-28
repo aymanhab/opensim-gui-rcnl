@@ -116,5 +116,12 @@ public class CoordinateTableModel  extends AbstractTableModel{
       fireTableDataChanged();
         
     }
+    
+    void selectShown() {
+        for (int q=0; q<shownQuantities.size(); q++){
+            selected.set(shownQuantities.get(q), true);
+        }
+        fireTableDataChanged();
+    }
 
 }
