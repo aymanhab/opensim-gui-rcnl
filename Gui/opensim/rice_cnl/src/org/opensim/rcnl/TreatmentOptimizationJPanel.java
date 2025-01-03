@@ -958,6 +958,8 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
         if(fileName!=null) {
             String fullFilename = FileUtils.addExtensionIfNeeded(fileName, ".xml");
             settingsAsObject.print(fullFilename);
+            // Now replace enclosing OpenSimDocument xml tag with NMSMPipeline xml tag
+            replaceOpenSimDocumentTags(fullFilename);
             treatmentOptimizationToolModel.setOCSettingsFile(fullFilename);
         }
         OpenSimObject.setSerializeAllDefaults(false);
