@@ -6,6 +6,8 @@
 package org.opensim.rcnl;
 
 import java.awt.Dialog;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Observable;
 import java.util.Observer;
@@ -13,12 +15,15 @@ import java.util.Vector;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.filechooser.FileFilter;
 import org.openide.DialogDescriptor;
 import org.openide.DialogDisplayer;
+import org.openide.util.Exceptions;
 import org.opensim.modeling.AbstractProperty;
 import org.opensim.modeling.Model;
 import org.opensim.modeling.OpenSimObject;
 import org.opensim.modeling.PropertyObjectList;
+import org.opensim.utils.FileUtils;
 import org.opensim.view.pub.OpenSimDB;
 
 /**
@@ -222,11 +227,11 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
                     .addComponent(jLabel5)
                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                     .addComponent(outputDirPath, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addGap(13, 13, 13)))
+                    .addGap(0, 0, 0)))
         );
         outputPanelLayout.setVerticalGroup(
             outputPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 69, Short.MAX_VALUE)
+            .addGap(0, 95, Short.MAX_VALUE)
             .addGroup(outputPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(outputPanelLayout.createSequentialGroup()
                     .addContainerGap()
@@ -252,6 +257,11 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
 
         buttonGroup1.add(jRadioButton2);
         org.openide.awt.Mnemonics.setLocalizedText(jRadioButton2, org.openide.util.NbBundle.getMessage(TreatmentOptimizationJPanel.class, "TreatmentOptimizationJPanel.jRadioButton2.text")); // NOI18N
+        jRadioButton2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jRadioButton2ActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jSolverSettingsPanelLayout = new javax.swing.GroupLayout(jSolverSettingsPanel);
         jSolverSettingsPanel.setLayout(jSolverSettingsPanelLayout);
@@ -272,7 +282,7 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
                                 .addComponent(jRadioButton1)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(solverSettingsFilePath, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))))
-                .addContainerGap())
+                .addGap(0, 0, 0))
         );
         jSolverSettingsPanelLayout.setVerticalGroup(
             jSolverSettingsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -333,16 +343,14 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
                     .addComponent(jLabel6))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(inputModelPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(inputModelPanelLayout.createSequentialGroup()
-                        .addGroup(inputModelPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(inputModelPanelLayout.createSequentialGroup()
-                                .addComponent(osimxFilePath, javax.swing.GroupLayout.DEFAULT_SIZE, 708, Short.MAX_VALUE)
-                                .addGap(3, 3, 3))
-                            .addComponent(trackedQuantitiesDirPath, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(InitialGuessDirPath, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                        .addContainerGap())
+                    .addComponent(osimxFilePath, javax.swing.GroupLayout.PREFERRED_SIZE, 708, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(trackedQuantitiesDirPath, javax.swing.GroupLayout.PREFERRED_SIZE, 711, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(InitialGuessDirPath, javax.swing.GroupLayout.PREFERRED_SIZE, 711, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(currentModelFileTextField, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
         );
+
+        inputModelPanelLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {InitialGuessDirPath, osimxFilePath, trackedQuantitiesDirPath});
+
         inputModelPanelLayout.setVerticalGroup(
             inputModelPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(inputModelPanelLayout.createSequentialGroup()
@@ -386,14 +394,14 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
         jCoordinatesListPanel2Layout.setHorizontalGroup(
             jCoordinatesListPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jCoordinatesListPanel2Layout.createSequentialGroup()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 871, Short.MAX_VALUE)
+                .addComponent(jScrollPane2)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jButtonEditSettingsCoordinateList, javax.swing.GroupLayout.PREFERRED_SIZE, 158, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
         jCoordinatesListPanel2Layout.setVerticalGroup(
             jCoordinatesListPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 284, Short.MAX_VALUE)
+            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 424, Short.MAX_VALUE)
             .addGroup(jCoordinatesListPanel2Layout.createSequentialGroup()
                 .addGap(98, 98, 98)
                 .addComponent(jButtonEditSettingsCoordinateList)
@@ -459,7 +467,7 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
         jCoordinatesListPanel3Layout.setHorizontalGroup(
             jCoordinatesListPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jCoordinatesListPanel3Layout.createSequentialGroup()
-                .addComponent(jScrollPane7, javax.swing.GroupLayout.DEFAULT_SIZE, 783, Short.MAX_VALUE)
+                .addComponent(jScrollPane7, javax.swing.GroupLayout.DEFAULT_SIZE, 777, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jButtonEditSynergyCoordinateList, javax.swing.GroupLayout.PREFERRED_SIZE, 232, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
@@ -511,7 +519,7 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
                 .addGroup(jSynergyControllerDetailsPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel2)
                     .addComponent(surrogateModelDirPath, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(93, Short.MAX_VALUE))
         );
 
         jRCNLTorqueControllerPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(org.openide.util.NbBundle.getMessage(TreatmentOptimizationJPanel.class, "TreatmentOptimizationJPanel.jRCNLTorqueControllerPanel.border.title"))); // NOI18N
@@ -555,13 +563,13 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
         jRCNLTorqueControllerPanel.setLayout(jRCNLTorqueControllerPanelLayout);
         jRCNLTorqueControllerPanelLayout.setHorizontalGroup(
             jRCNLTorqueControllerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 1035, Short.MAX_VALUE)
+            .addGap(0, 1029, Short.MAX_VALUE)
             .addGroup(jRCNLTorqueControllerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addComponent(JTorqueControllerDetailsPanel1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jRCNLTorqueControllerPanelLayout.setVerticalGroup(
             jRCNLTorqueControllerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 347, Short.MAX_VALUE)
+            .addGap(0, 383, Short.MAX_VALUE)
             .addGroup(jRCNLTorqueControllerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jRCNLTorqueControllerPanelLayout.createSequentialGroup()
                     .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -584,7 +592,7 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
             jControllersPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jControllersPanelLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jSynergyControllerDetailsPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 533, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jSynergyControllerDetailsPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(jRCNLTorqueControllerPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
@@ -625,7 +633,7 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
         jCostTermsPanelLayout.setHorizontalGroup(
             jCostTermsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jCostTermsPanelLayout.createSequentialGroup()
-                .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 861, Short.MAX_VALUE)
+                .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 855, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jCostTermsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(deleteCostTermButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -642,7 +650,7 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
                 .addComponent(editCostTermButton)
                 .addGap(14, 14, 14)
                 .addComponent(deleteCostTermButton)
-                .addContainerGap(180, Short.MAX_VALUE))
+                .addContainerGap(346, Short.MAX_VALUE))
         );
 
         jConstTermsPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(org.openide.util.NbBundle.getMessage(TreatmentOptimizationJPanel.class, "TreatmentOptimizationJPanel.jConstTermsPanel.border.title"))); // NOI18N
@@ -721,7 +729,7 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jTabbedPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 1061, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addComponent(jTabbedPane1)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -753,6 +761,22 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
 
     private void deleteConstraintTermButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteConstraintTermButtonActionPerformed
         // TODO add your handling code here:
+        int[] sels = jConstraintTermList.getSelectedIndices();
+        PropertyObjectList poList = treatmentOptimizationToolModel.getConstraintTermListAsObjectList();
+        Vector<Integer> tasksToDelete = new Vector<Integer>();
+        for (int i=0; i<sels.length; i++){
+            //OpenSimObject selectedJointTask = (OpenSimObject)jJointPersonalizationList.get(sels[i]);
+            tasksToDelete.add(sels[i]);
+        }
+        //jJointPersonalizationList
+        // Delete items from jmpJointListModel in reverse order
+        for (int r=tasksToDelete.size(); r >0; r-- ){
+            constraintTermListModel.remove(tasksToDelete.get(r-1));
+            poList.removeValueAtIndex(tasksToDelete.get(r-1));
+        }
+        // Recreate list model to cleanup
+        constraintTermListModel = new ConstraintTermListModel(poList);
+        jConstraintTermList.setModel(constraintTermListModel);
     }//GEN-LAST:event_deleteConstraintTermButtonActionPerformed
 
     private void editConstraintTermButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_editConstraintTermButtonActionPerformed
@@ -925,6 +949,20 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
         treatmentOptimizationToolModel.setOptimizeSynergyVector(jOptimizeSynVecCheckBox.isSelected());
     }//GEN-LAST:event_jOptimizeSynVecCheckBoxActionPerformed
 
+    private void jRadioButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jRadioButton2ActionPerformed
+        // TODO add your handling code here:
+        OpenSimObject settingsAsObject = OpenSimObject.newInstanceOfType("OptimalControlSolverSettings");
+        OpenSimObject.setSerializeAllDefaults(true);
+        FileFilter settingsFilter = FileUtils.getFileFilter(".xml", "Optimal Control Solver Settings");
+        String fileName = FileUtils.getInstance().browseForFilenameToSave(settingsFilter, true, "", null);
+        if(fileName!=null) {
+            String fullFilename = FileUtils.addExtensionIfNeeded(fileName, ".xml");
+            settingsAsObject.print(fullFilename);
+            treatmentOptimizationToolModel.setOCSettingsFile(fullFilename);
+        }
+        OpenSimObject.setSerializeAllDefaults(false);
+    }//GEN-LAST:event_jRadioButton2ActionPerformed
+
     @Override
     public void update(Observable o, Object o1) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
@@ -936,13 +974,8 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
     }
 
     @Override
-    public String getToolXML() {
-        return treatmentOptimizationToolModel.getToolAsObject().dump();
-    }
-
-    @Override
     public void loadSettings(String nmsmFilename) {
-        String fileName = super.stripOuterTags(nmsmFilename);
+        String fileName = BaseToolPanel.stripOuterTags(nmsmFilename);
         Model model = OpenSimDB.getInstance().getCurrentModel();
         
        //if(model==null) throw new IOException("JointPersonalizationJPanel got null model");
@@ -963,6 +996,9 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
        
        // Cost+Constraints
        costTermListModel = new CostTermListModel(treatmentOptimizationToolModel.getCostTermListAsObjectList());
+       jCostTermList.setModel(costTermListModel);
+       constraintTermListModel = new ConstraintTermListModel(treatmentOptimizationToolModel.getConstraintTermListAsObjectList());
+       jConstraintTermList.setModel(constraintTermListModel);
     }  
 
     @Override
@@ -1058,5 +1094,25 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
             deleteConstraintTermButton.setEnabled(sels.length>=1);
         }
     }
+    @Override
+    public void saveSettings(String fileName) {
+         String fullFilename = FileUtils.addExtensionIfNeeded(fileName, ".xml");
+        OpenSimObject obj = treatmentOptimizationToolModel.getToolAsObject();
+        forceWritableProperties(obj);
+        obj.print(fullFilename);
+        replaceOpenSimDocumentTags(fullFilename);
+   }
 
+    @Override
+    void forceWritableProperties(OpenSimObject dObject) {
+        super.forceWritableProperties(dObject); //To change body of generated methods, choose Tools | Templates.
+        AbstractProperty ap = dObject.getPropertyByName("RCNLCostTermSet");
+        PropertyObjectList olist = PropertyObjectList.getAs(ap);
+        for (int i=0; i< olist.size(); i++){
+            OpenSimObject costterm = olist.getValue(i);
+            costterm.updPropertyByName("max_allowable_error").setValueIsDefault(false);
+        }
+    }
+
+    
 }

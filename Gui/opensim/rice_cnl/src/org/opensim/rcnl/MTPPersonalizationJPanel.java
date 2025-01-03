@@ -633,7 +633,7 @@ public class MTPPersonalizationJPanel extends BaseToolPanel  implements Observer
 
     @Override
     public void loadSettings(String nmsmFilename) {
-        String fileName = super.stripOuterTags(nmsmFilename);
+        String fileName = BaseToolPanel.stripOuterTags(nmsmFilename);
         Model model = OpenSimDB.getInstance().getCurrentModel();
        //if(model==null) throw new IOException("JointPersonalizationJPanel got null model");
        mtpPersonalizationToolModel = new MTPPersonalizationToolModel(model, fileName);
@@ -701,8 +701,20 @@ public class MTPPersonalizationJPanel extends BaseToolPanel  implements Observer
     // End of variables declaration//GEN-END:variables
 
     @Override
-    String getToolXML() {
-        return mtpPersonalizationToolModel.getToolAsObject().dump();
+    public void saveSettings(String fileName) {
+        String fullFilename = FileUtils.addExtensionIfNeeded(fileName, ".xml");
+        OpenSimObject obj = mtpPersonalizationToolModel.getToolAsObject();
+        forceWritableProperties(obj);
+        obj.print(fullFilename);
+        replaceOpenSimDocumentTags(fullFilename);
     }
 
+    @Override
+    void forceWritableProperties(OpenSimObject dObject) {
+        super.forceWritableProperties(dObject); //To change body of generated methods, choose Tools | Templates.
+        dObject.updPropertyByName("MuscleTendonLengthInitialization").setValueIsDefault(false);
+        dObject.updPropertyByName("MTPSynergyExtrapolation").setValueIsDefault(false);
+    }
+    
+    
 }

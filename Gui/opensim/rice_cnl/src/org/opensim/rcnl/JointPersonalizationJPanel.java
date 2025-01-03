@@ -304,13 +304,17 @@ public class JointPersonalizationJPanel extends BaseToolPanel  implements Observ
     }
 
     @Override
-    public String getToolXML() {
-        return jointPersonalizationToolModel.getToolAsObject().dump();
+    public void saveSettings(String fileName) {
+        String fullFilename = FileUtils.addExtensionIfNeeded(fileName, ".xml");
+        OpenSimObject obj = jointPersonalizationToolModel.getToolAsObject();
+        forceWritableProperties(obj);
+        obj.print(fullFilename);
+        replaceOpenSimDocumentTags(fullFilename);
     }
 
     @Override
     public void loadSettings(String nmsmFilename) {
-        String fileName = super.stripOuterTags(nmsmFilename);
+        String fileName = BaseToolPanel.stripOuterTags(nmsmFilename);
         Model model = OpenSimDB.getInstance().getCurrentModel();
        //if(model==null) throw new IOException("JointPersonalizationJPanel got null model");
        jointPersonalizationToolModel = new JointPersonalizationToolModel(model, fileName);
@@ -329,6 +333,24 @@ public class JointPersonalizationJPanel extends BaseToolPanel  implements Observ
     @Override
     public void setSettingsFileDescription(String description) {
         super.setSettingsFileDescription(description); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    void forceWritableProperties(OpenSimObject dObject) {
+        super.forceWritableProperties(dObject); //To change body of generated methods, choose Tools | Templates.
+        // For each JMPTask in tasklist, force write of parent_frame_transformation, child_frame_transformation
+        // dObject is an instance of JointModelPersonalizationTool
+        AbstractProperty ap = dObject.getPropertyByName("JMPTaskList");
+        PropertyObjectList olist = PropertyObjectList.getAs(ap);
+        for (int i=0; i< olist.size(); i++){
+            OpenSimObject ithTask = olist.getValue(i);
+            AbstractProperty apJnts = ithTask.getPropertyByName("JMPJointSet");
+            PropertyObjectList poJointList = PropertyObjectList.updAs(apJnts);
+             for (int j=0; j<poJointList.size(); j++){
+                poJointList.getValue(j).updPropertyByName("parent_frame_transformation").setValueIsDefault(false);
+                poJointList.getValue(j).updPropertyByName("child_frame_transformation").setValueIsDefault(false);
+             }
+        }
     }
 
 

@@ -113,7 +113,9 @@ public class TreatmentOptimizationToolModel {
         propOCSettingsFileString = PropertyStringList.getAs(propOCSettingsFile);
         AbstractProperty propStatesCoordinateList = toolAsObject.updPropertyByName("states_coordinate_list");        
         propStatesCoordinateListString = PropertyStringList.getAs(propStatesCoordinateList);
-        propRCNLSynergyControllerObject = toolAsObject.updPropertyByName("RCNLSynergyController").getValueAsObject(); 
+        boolean defaultProp = toolAsObject.getPropertyByName("RCNLSynergyController").getValueIsDefault();
+        propRCNLSynergyControllerObject = toolAsObject.updPropertyByName("RCNLSynergyController").getValueAsObject();
+        defaultProp = toolAsObject.getPropertyByName("RCNLSynergyController").getValueIsDefault();
         // Convert to ObjectProperty so we can dig deeper
         propOptimizeForSynvergyVectorBool = PropertyBoolList.getAs(propRCNLSynergyControllerObject.updPropertyByName("optimize_synergy_vectors"));
         propSurrogateModelDirString = PropertyStringList.getAs(propRCNLSynergyControllerObject.updPropertyByName("surrogate_model_data_directory"));
