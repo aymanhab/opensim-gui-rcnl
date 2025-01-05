@@ -920,6 +920,7 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
         if (((Integer)userInput).compareTo((Integer)DialogDescriptor.OK_OPTION)==0){
             ctm.populateCoordinateListProperty();
             jSynergyCoordinateListTextArea.setText(treatmentOptimizationToolModel.getRCNLSynergyCoordinateListString().toString());
+            treatmentOptimizationToolModel.markSynergyControllerModified();
         }
 
     }//GEN-LAST:event_jButtonEditSynergyCoordinateListActionPerformed
@@ -940,6 +941,7 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
         if (((Integer)userInput).compareTo((Integer)DialogDescriptor.OK_OPTION)==0){
             ctm.populateCoordinateListProperty();
             jCoordinateListTorqueControllerTextArea.setText(treatmentOptimizationToolModel.getRCNLTorqueCoordinateListString().toString());
+            treatmentOptimizationToolModel.markTorqueControllerModified();
         }
         
     }//GEN-LAST:event_jButtonEditTorqueCoordinateListActionPerformed
