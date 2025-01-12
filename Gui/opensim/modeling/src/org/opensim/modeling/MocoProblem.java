@@ -138,6 +138,39 @@ public class MocoProblem extends OpenSimObject {
                 MocoPhase.convertArrayToMFB(fb));
     }
 
+    public void setInputControlInfo(String name, double[] b)
+        throws Exception {
+        setInputControlInfo(name, MocoPhase.convertArrayToMB(b));
+    }
+    public void setInputControlInfo(String name, double[] b, double[] ib)
+        throws Exception {
+        setInputControlInfo(name, MocoPhase.convertArrayToMB(b),
+                MocoPhase.convertArrayToMIB(ib));
+    }
+    public void setInputControlInfo(String name, double[] b, double[] ib,
+            double[] fb)
+        throws Exception {
+        setInputControlInfo(name, MocoPhase.convertArrayToMB(b),
+                MocoPhase.convertArrayToMIB(ib), 
+                MocoPhase.convertArrayToMFB(fb));
+    }
+    public void setInputControlInfoPattern(String pattern, double[] b)
+        throws Exception {
+        setInputControlInfoPattern(pattern, MocoPhase.convertArrayToMB(b));
+    }
+    public void setInputControlInfoPattern(String pattern, double[] b, double[] ib)
+        throws Exception {
+        setInputControlInfoPattern(pattern, MocoPhase.convertArrayToMB(b),
+                MocoPhase.convertArrayToMIB(ib));
+    }
+    public void 
+    setInputControlInfoPattern(String pattern, double[] b, double[] ib, double[] fb)
+        throws Exception {
+        setInputControlInfoPattern(pattern, MocoPhase.convertArrayToMB(b),
+                MocoPhase.convertArrayToMIB(ib), 
+                MocoPhase.convertArrayToMFB(fb));
+    }
+
   public static MocoProblem safeDownCast(OpenSimObject obj) {
     long cPtr = opensimMocoJNI.MocoProblem_safeDownCast(OpenSimObject.getCPtr(obj), obj);
     return (cPtr == 0) ? null : new MocoProblem(cPtr, false);
@@ -297,6 +330,48 @@ public class MocoProblem extends OpenSimObject {
   }
 
   /**
+   *  Set bounds for an Input control variable for phase 0.
+   */
+  public void setInputControlInfo(String name, MocoBounds arg1, MocoInitialBounds arg2, MocoFinalBounds arg3) {
+    opensimMocoJNI.MocoProblem_setInputControlInfo__SWIG_0(swigCPtr, this, name, MocoBounds.getCPtr(arg1), arg1, MocoInitialBounds.getCPtr(arg2), arg2, MocoFinalBounds.getCPtr(arg3), arg3);
+  }
+
+  /**
+   *  Set bounds for an Input control variable for phase 0.
+   */
+  public void setInputControlInfo(String name, MocoBounds arg1, MocoInitialBounds arg2) {
+    opensimMocoJNI.MocoProblem_setInputControlInfo__SWIG_1(swigCPtr, this, name, MocoBounds.getCPtr(arg1), arg1, MocoInitialBounds.getCPtr(arg2), arg2);
+  }
+
+  /**
+   *  Set bounds for an Input control variable for phase 0.
+   */
+  public void setInputControlInfo(String name, MocoBounds arg1) {
+    opensimMocoJNI.MocoProblem_setInputControlInfo__SWIG_2(swigCPtr, this, name, MocoBounds.getCPtr(arg1), arg1);
+  }
+
+  /**
+   *  Set bounds for an Input control variable using a regular expression.
+   */
+  public void setInputControlInfoPattern(String pattern, MocoBounds arg1, MocoInitialBounds arg2, MocoFinalBounds arg3) {
+    opensimMocoJNI.MocoProblem_setInputControlInfoPattern__SWIG_0(swigCPtr, this, pattern, MocoBounds.getCPtr(arg1), arg1, MocoInitialBounds.getCPtr(arg2), arg2, MocoFinalBounds.getCPtr(arg3), arg3);
+  }
+
+  /**
+   *  Set bounds for an Input control variable using a regular expression.
+   */
+  public void setInputControlInfoPattern(String pattern, MocoBounds arg1, MocoInitialBounds arg2) {
+    opensimMocoJNI.MocoProblem_setInputControlInfoPattern__SWIG_1(swigCPtr, this, pattern, MocoBounds.getCPtr(arg1), arg1, MocoInitialBounds.getCPtr(arg2), arg2);
+  }
+
+  /**
+   *  Set bounds for an Input control variable using a regular expression.
+   */
+  public void setInputControlInfoPattern(String pattern, MocoBounds arg1) {
+    opensimMocoJNI.MocoProblem_setInputControlInfoPattern__SWIG_2(swigCPtr, this, pattern, MocoBounds.getCPtr(arg1), arg1);
+  }
+
+  /**
    *  Set bounds for the kinematic constraints in phase 0.
    */
   public void setKinematicConstraintBounds(MocoBounds bounds) {
@@ -356,9 +431,9 @@ public class MocoProblem extends OpenSimObject {
    *  dynamically-allocated MocoProblemRep.
    */
   public MocoProblemRep createRep() {
-long cPtr = opensimMocoJNI.MocoProblem_createRep(swigCPtr, this);
-return (cPtr == 0) ? null : new MocoProblemRep(cPtr, true);
-}
+    long cPtr = opensimMocoJNI.MocoProblem_createRep(swigCPtr, this);
+    return (cPtr == 0) ? null : new MocoProblemRep(cPtr, true);
+  }
 
   private void private_setModel(Model model) {
     opensimMocoJNI.MocoProblem_private_setModel(swigCPtr, this, Model.getCPtr(model), model);

@@ -8,18 +8,22 @@
 
 package org.opensim.modeling;
 
-public class SWIGTYPE_p_OpenSim__DiscreteController {
+public class SWIGTYPE_p_OpenSim__ForceConsumer {
   private transient long swigCPtr;
 
-  protected SWIGTYPE_p_OpenSim__DiscreteController(long cPtr, @SuppressWarnings("unused") boolean futureUse) {
+  protected SWIGTYPE_p_OpenSim__ForceConsumer(long cPtr, @SuppressWarnings("unused") boolean futureUse) {
     swigCPtr = cPtr;
   }
 
-  protected SWIGTYPE_p_OpenSim__DiscreteController() {
+  protected SWIGTYPE_p_OpenSim__ForceConsumer() {
     swigCPtr = 0;
   }
 
-  protected static long getCPtr(SWIGTYPE_p_OpenSim__DiscreteController obj) {
+  protected static long getCPtr(SWIGTYPE_p_OpenSim__ForceConsumer obj) {
+    return (obj == null) ? 0 : obj.swigCPtr;
+  }
+
+  protected static long swigRelease(SWIGTYPE_p_OpenSim__ForceConsumer obj) {
     return (obj == null) ? 0 : obj.swigCPtr;
   }
 }

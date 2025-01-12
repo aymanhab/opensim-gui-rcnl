@@ -4,6 +4,13 @@ GitHub issues or pull requests that
 are related to the items below. If there is no issue or pull
 request related to the change, then we may provide the commit.
 
+v4.6
+======
+- Fix issue [#1494](https://github.com/opensim-org/opensim-gui/issues/1494): Changing muscle path color throws exception.
+- Fix issue [#1493](https://github.com/opensim-org/opensim-gui/issues/1493): Rotating experimental data fails or results an unusable file.
+- Fix issue [#1516](https://github.com/opensim-org/opensim-gui/issues/1516): Chains of Physical offset frames ignored when displaying GeometryPath
+- Fix issue [#1519](https://github.com/opensim-org/opensim-gui/issues/1519): Exception thrown when browsing for output folder in Inverse Dynamics Tool dialog
+
 v4.5
 ======
 - Fix issue [#1378](https://github.com/opensim-org/opensim-gui/issues/1378): In Static Optimization Tool, dialog box has wrong title for "Directory" in output section.

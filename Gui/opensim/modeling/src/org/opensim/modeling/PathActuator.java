@@ -185,6 +185,10 @@ public class PathActuator extends ScalarActuator {
     return opensimSimulationJNI.PathActuator_getLengtheningSpeed(swigCPtr, this, State.getCPtr(s), s);
   }
 
+  public double getSpeed(State s) {
+    return opensimSimulationJNI.PathActuator_getSpeed(swigCPtr, this, State.getCPtr(s), s);
+  }
+
   public double getPower(State s) {
     return opensimSimulationJNI.PathActuator_getPower(swigCPtr, this, State.getCPtr(s), s);
   }
@@ -201,10 +205,6 @@ public class PathActuator extends ScalarActuator {
    */
   public void addNewPathPoint(String proposedName, PhysicalFrame aBody, Vec3 aPositionOnBody) {
     opensimSimulationJNI.PathActuator_addNewPathPoint(swigCPtr, this, proposedName, PhysicalFrame.getCPtr(aBody), aBody, Vec3.getCPtr(aPositionOnBody), aPositionOnBody);
-  }
-
-  public void computeForce(State state, VectorOfSpatialVec bodyForces, Vector mobilityForces) {
-    opensimSimulationJNI.PathActuator_computeForce(swigCPtr, this, State.getCPtr(state), state, VectorOfSpatialVec.getCPtr(bodyForces), bodyForces, Vector.getCPtr(mobilityForces), mobilityForces);
   }
 
   public double computeActuation(State s) {

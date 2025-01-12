@@ -27,8 +27,7 @@ package org.opensim.modeling;
  *       directory to which the results are written can be specified using the<br>
  *      `setOutputDirectory` method.<br>
  * <br>
- * Settings<br>
- * --------<br>
+ * # Settings<br>
  * Various settings can be adjusted to control the path fitting process. The<br>
  * `setMomentArmsThreshold` method determines whether or not a path depends on a<br>
  * model coordinate. In other words, the absolute value the moment arm of a with<br>
@@ -45,10 +44,10 @@ package org.opensim.modeling;
  * lengths computed from the original model paths and the fitted polynomial<br>
  * paths. The `setNumSamplesPerFrame` method specifies the number of samples<br>
  * taken per time frame in the coordinate values table used to fit each path.<br>
- * The `setParallel` method specifies the number of threads used to parallelize<br>
- * the path fitting process. The `setLatinHypercubeAlgorithm` method specifies<br>
- * the Latin hypercube sampling algorithm used to sample coordinate values for<br>
- * path fitting.<br>
+ * The `setNumParallelThreads` method specifies the number of threads used to<br>
+ * parallelize the path fitting process. The `setLatinHypercubeAlgorithm` method<br>
+ * specifies the Latin hypercube sampling algorithm used to sample coordinate<br>
+ * values for path fitting.<br>
  * <br>
  * The default settings are as follows:<br>
  * <br>
@@ -59,16 +58,16 @@ package org.opensim.modeling;
  *    - Moment arm tolerance: 1e-4 meters<br>
  *    - Path length tolerance: 1e-4 meters<br>
  *    - Number of samples per frame: 25<br>
- *    - Number of threads: (# of available hardware threads) - 2<br>
+ *    - Number of threads: number of available hardware threads<br>
  *    - Latin hypercube sampling algorithm: "random"<br>
+ *    - Use stepwise regression: False<br>
  * <br>
  * Note: The default settings were chosen based on testing with a human<br>
  *       lower-extremity model. Different settings may be required for other<br>
  *       models with larger or smaller anatomical measures (e.g., dinosaur<br>
  *       models).<br>
  * <br>
- * Usage<br>
- * -----<br>
+ * # Usage<br>
  * The most basic usage of `PolynomialPathFitter` requires the user to provide<br>
  * a model and reference trajectory. The model should contain at least one path<br>
  * object derived from `AbstractGeometryPath` and should not contain any<br>
@@ -99,8 +98,7 @@ fitter.setNumSamplesPerFrame(50);
 fitter.run();
 }<br>
  * <br>
- * Recommendations<br>
- * ---------------<br>
+ * # Recommendations<br>
  * Information from each step of the path fitting process is logged to the<br>
  * console, provided that you have set the OpenSim::Logger to level "info" or<br>
  * greater. Warnings are printed if the number of samples is likely insufficient<br>
@@ -294,6 +292,29 @@ public class PolynomialPathFitter extends OpenSimObject {
   }
 
   /**
+   * Whether or not to use stepwise regression to fit a minimal set of<br>
+   * polynomial coefficients.<br>
+   * <br>
+   * Stepwise regression builds a vector of coefficients by individually<br>
+   * adding polynomial terms that result in the smallest path length and<br>
+   * moment arm error. When a new term is added, the fitting process is<br>
+   * repeated to recompute the coefficients. Polynomial terms are added until<br>
+   * the path length and moment arm tolerances are met, or the maximum number<br>
+   * of terms is reached.<br>
+   * <br>
+   * Note: By default, this setting is false.<br>
+   * Note: If enabled, stepwise regression will fit coefficients using the<br>
+   *       maximum polynomial order based on `setMaximumPolynomialOrder()`.
+   */
+  public void setUseStepwiseRegression(boolean tf) {
+    opensimActuatorsAnalysesToolsJNI.PolynomialPathFitter_setUseStepwiseRegression(swigCPtr, this, tf);
+  }
+
+  public boolean getUseStepwiseRegression() {
+    return opensimActuatorsAnalysesToolsJNI.PolynomialPathFitter_getUseStepwiseRegression(swigCPtr, this);
+  }
+
+  /**
    * The moment arm threshold value that determines whether or not a path<br>
    * depends on a model coordinate. In other words, the moment arm of a path<br>
    * with respect to a particular coordinate must be greater than this value<br>
@@ -474,15 +495,14 @@ public class PolynomialPathFitter extends OpenSimObject {
    * moment arm computations, and path fitting across multiple threads. The<br>
    * number of threads must be greater than zero.<br>
    * <br>
-   * Note: The default number of threads is set to two fewer than the number<br>
-   *       of available hardware threads.
+   * Note: The default is the number of available hardware threads.
    */
   public void setNumParallelThreads(int numThreads) {
     opensimActuatorsAnalysesToolsJNI.PolynomialPathFitter_setNumParallelThreads(swigCPtr, this, numThreads);
   }
 
   /**
-   *  
+   *   numThreads)
    */
   public int getNumParallelThreads() {
     return opensimActuatorsAnalysesToolsJNI.PolynomialPathFitter_getNumParallelThreads(swigCPtr, this);
@@ -510,6 +530,53 @@ public class PolynomialPathFitter extends OpenSimObject {
    */
   public String getLatinHypercubeAlgorithm() {
     return opensimActuatorsAnalysesToolsJNI.PolynomialPathFitter_getLatinHypercubeAlgorithm(swigCPtr, this);
+  }
+
+  /**
+   * Whether or not to include moment arm functions in the fitted path<br>
+   * (default: false).<br>
+   * <br>
+   * The moment arm functions are constructed by taking the derivative of the<br>
+   * path length function with respect to the coordinate values using<br>
+   * symbolic differentiation. The function coefficients are negated to match<br>
+   * the moment arm convention in OpenSim.
+   */
+  public void setIncludeMomentArmFunctions(boolean tf) {
+    opensimActuatorsAnalysesToolsJNI.PolynomialPathFitter_setIncludeMomentArmFunctions(swigCPtr, this, tf);
+  }
+
+  /**
+   *   tf)
+   */
+  public boolean getIncludeMomentArmFunctions() {
+    return opensimActuatorsAnalysesToolsJNI.PolynomialPathFitter_getIncludeMomentArmFunctions(swigCPtr, this);
+  }
+
+  /**
+   * Whether or not to include the lengthening speed function in the fitted<br>
+   * path (default: false).<br>
+   * <br>
+   * The lengthening speed function is computed by taking dot product of the<br>
+   * moment arm functions by the vector of time derivatives of the coordinate<br>
+   * values using symbolic math. The result is negated to offset the negation<br>
+   * applied to the moment arm function expressions.<br>
+   * <br>
+   * Note: Since FunctionBasedPath uses cached moment arm values to compute<br>
+   *       lengthening speed, including this function in the path definition<br>
+   *       may make lengthening speed evaluation slower compared to<br>
+   *       only including the moment arm functions (the moment arm expressions<br>
+   *       are effectively evaluated twice). Therefore, this setting is<br>
+   *       disabled by default.
+   */
+  public void setIncludeLengtheningSpeedFunction(boolean tf) {
+    opensimActuatorsAnalysesToolsJNI.PolynomialPathFitter_setIncludeLengtheningSpeedFunction(swigCPtr, this, tf);
+  }
+
+  /**
+   *   tf)
+   */
+  public boolean getIncludeLengtheningSpeedFunction() {
+    return opensimActuatorsAnalysesToolsJNI.PolynomialPathFitter_getIncludeLengtheningSpeedFunction(swigCPtr, this);
   }
 
   /**

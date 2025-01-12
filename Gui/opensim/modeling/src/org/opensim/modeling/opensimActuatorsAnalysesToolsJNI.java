@@ -888,7 +888,8 @@ public class opensimActuatorsAnalysesToolsJNI {
   public final static native void DeGrooteFregly2016Muscle_calcFiberForce(long jarg1, DeGrooteFregly2016Muscle jarg1_, double jarg2, double jarg3, double jarg4, double jarg5, double jarg6, long jarg7, long jarg8, long jarg9, long jarg10);
   public final static native double DeGrooteFregly2016Muscle_calcFiberStiffness(long jarg1, DeGrooteFregly2016Muscle jarg1_, double jarg2, double jarg3, double jarg4);
   public final static native double DeGrooteFregly2016Muscle_calcTendonStiffness(long jarg1, DeGrooteFregly2016Muscle jarg1_, double jarg2);
-  public final static native double DeGrooteFregly2016Muscle_calcMuscleStiffness(long jarg1, DeGrooteFregly2016Muscle jarg1_, double jarg2, double jarg3);
+  public final static native double DeGrooteFregly2016Muscle_calcMuscleStiffness__SWIG_0(long jarg1, DeGrooteFregly2016Muscle jarg1_, double jarg2, double jarg3);
+  public final static native double DeGrooteFregly2016Muscle_calcMuscleStiffness__SWIG_1(long jarg1, DeGrooteFregly2016Muscle jarg1_, long jarg2, State jarg2_);
   public final static native double DeGrooteFregly2016Muscle_calcPartialPennationAnglePartialFiberLength(long jarg1, DeGrooteFregly2016Muscle jarg1_, double jarg2);
   public final static native double DeGrooteFregly2016Muscle_calcPartialFiberForceAlongTendonPartialFiberLength(long jarg1, DeGrooteFregly2016Muscle jarg1_, double jarg2, double jarg3, double jarg4, double jarg5, double jarg6);
   public final static native double DeGrooteFregly2016Muscle_calcFiberStiffnessAlongTendon(long jarg1, DeGrooteFregly2016Muscle jarg1_, double jarg2, double jarg3, double jarg4, double jarg5, double jarg6);
@@ -1077,6 +1078,14 @@ public class opensimActuatorsAnalysesToolsJNI {
   public final static native long new_ModOpReplacePathsWithFunctionBasedPaths__SWIG_1(String jarg1);
   public final static native void ModOpReplacePathsWithFunctionBasedPaths_operate(long jarg1, ModOpReplacePathsWithFunctionBasedPaths jarg1_, long jarg2, Model jarg2_, String jarg3);
   public final static native void delete_ModOpReplacePathsWithFunctionBasedPaths(long jarg1);
+  public final static native long ModOpPrescribeCoordinateValues_safeDownCast(long jarg1, OpenSimObject jarg1_);
+  public final static native void ModOpPrescribeCoordinateValues_assign(long jarg1, ModOpPrescribeCoordinateValues jarg1_, long jarg2, OpenSimObject jarg2_);
+  public final static native String ModOpPrescribeCoordinateValues_getClassName();
+  public final static native long ModOpPrescribeCoordinateValues_clone(long jarg1, ModOpPrescribeCoordinateValues jarg1_);
+  public final static native String ModOpPrescribeCoordinateValues_getConcreteClassName(long jarg1, ModOpPrescribeCoordinateValues jarg1_);
+  public final static native long new_ModOpPrescribeCoordinateValues(long jarg1, TableProcessor jarg1_);
+  public final static native void ModOpPrescribeCoordinateValues_operate(long jarg1, ModOpPrescribeCoordinateValues jarg1_, long jarg2, Model jarg2_, String jarg3);
+  public final static native void delete_ModOpPrescribeCoordinateValues(long jarg1);
   public final static native long PolynomialPathFitterBounds_safeDownCast(long jarg1, OpenSimObject jarg1_);
   public final static native void PolynomialPathFitterBounds_assign(long jarg1, PolynomialPathFitterBounds jarg1_, long jarg2, OpenSimObject jarg2_);
   public final static native String PolynomialPathFitterBounds_getClassName();
@@ -1116,6 +1125,8 @@ public class opensimActuatorsAnalysesToolsJNI {
   public final static native void PolynomialPathFitter_run(long jarg1, PolynomialPathFitter jarg1_);
   public final static native void PolynomialPathFitter_setOutputDirectory(long jarg1, PolynomialPathFitter jarg1_, String jarg2);
   public final static native String PolynomialPathFitter_getOutputDirectory(long jarg1, PolynomialPathFitter jarg1_);
+  public final static native void PolynomialPathFitter_setUseStepwiseRegression(long jarg1, PolynomialPathFitter jarg1_, boolean jarg2);
+  public final static native boolean PolynomialPathFitter_getUseStepwiseRegression(long jarg1, PolynomialPathFitter jarg1_);
   public final static native void PolynomialPathFitter_setMomentArmThreshold(long jarg1, PolynomialPathFitter jarg1_, double jarg2);
   public final static native double PolynomialPathFitter_getMomentArmThreshold(long jarg1, PolynomialPathFitter jarg1_);
   public final static native void PolynomialPathFitter_setMinimumPolynomialOrder(long jarg1, PolynomialPathFitter jarg1_, int jarg2);
@@ -1135,6 +1146,10 @@ public class opensimActuatorsAnalysesToolsJNI {
   public final static native int PolynomialPathFitter_getNumParallelThreads(long jarg1, PolynomialPathFitter jarg1_);
   public final static native void PolynomialPathFitter_setLatinHypercubeAlgorithm(long jarg1, PolynomialPathFitter jarg1_, String jarg2);
   public final static native String PolynomialPathFitter_getLatinHypercubeAlgorithm(long jarg1, PolynomialPathFitter jarg1_);
+  public final static native void PolynomialPathFitter_setIncludeMomentArmFunctions(long jarg1, PolynomialPathFitter jarg1_, boolean jarg2);
+  public final static native boolean PolynomialPathFitter_getIncludeMomentArmFunctions(long jarg1, PolynomialPathFitter jarg1_);
+  public final static native void PolynomialPathFitter_setIncludeLengtheningSpeedFunction(long jarg1, PolynomialPathFitter jarg1_, boolean jarg2);
+  public final static native boolean PolynomialPathFitter_getIncludeLengtheningSpeedFunction(long jarg1, PolynomialPathFitter jarg1_);
   public final static native void PolynomialPathFitter_evaluateFunctionBasedPaths__SWIG_0(long jarg1, Model jarg1_, long jarg2, TableProcessor jarg2_, String jarg3, double jarg4, double jarg5);
   public final static native void PolynomialPathFitter_evaluateFunctionBasedPaths__SWIG_1(long jarg1, Model jarg1_, long jarg2, TableProcessor jarg2_, String jarg3, double jarg4);
   public final static native void PolynomialPathFitter_evaluateFunctionBasedPaths__SWIG_2(long jarg1, Model jarg1_, long jarg2, TableProcessor jarg2_, String jarg3);
@@ -2526,6 +2541,7 @@ public class opensimActuatorsAnalysesToolsJNI {
   public final static native long ModOpReplaceJointsWithWelds_SWIGUpcast(long jarg1);
   public final static native long ModOpReplaceMusclesWithPathActuators_SWIGUpcast(long jarg1);
   public final static native long ModOpReplacePathsWithFunctionBasedPaths_SWIGUpcast(long jarg1);
+  public final static native long ModOpPrescribeCoordinateValues_SWIGUpcast(long jarg1);
   public final static native long PolynomialPathFitterBounds_SWIGUpcast(long jarg1);
   public final static native long PolynomialPathFitter_SWIGUpcast(long jarg1);
   public final static native long Kinematics_SWIGUpcast(long jarg1);

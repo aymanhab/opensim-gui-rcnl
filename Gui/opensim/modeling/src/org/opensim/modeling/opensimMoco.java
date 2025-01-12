@@ -19,9 +19,11 @@ public class opensimMoco {
 
   /**
    *  Given a MocoTrajectory and the associated OpenSim model, return the model<br>
-   *  with a prescribed controller appended that will compute the control values<br>
-   *  from the MocoTrajectory. This can be useful when computing state-dependent<br>
-   *  model quantities that require realization to the Dynamics stage or later.<br>
+   *  with a PrescribedController appended that will compute the control values<br>
+   *  from the MocoTrajectory. This function will also add SignalGenerator%s to <br>
+   *  prescribe Input control values for any InputController%s in the model.This <br>
+   *  can be useful when computing state-dependent model quantities that require <br>
+   *  realization to the Dynamics stage or later.<br>
    *  The function used to fit the controls can either be GCVSpline or<br>
    *  PiecewiseLinearFunction.<br>
    *  
@@ -32,9 +34,11 @@ public class opensimMoco {
 
   /**
    *  Given a MocoTrajectory and the associated OpenSim model, return the model<br>
-   *  with a prescribed controller appended that will compute the control values<br>
-   *  from the MocoTrajectory. This can be useful when computing state-dependent<br>
-   *  model quantities that require realization to the Dynamics stage or later.<br>
+   *  with a PrescribedController appended that will compute the control values<br>
+   *  from the MocoTrajectory. This function will also add SignalGenerator%s to <br>
+   *  prescribe Input control values for any InputController%s in the model.This <br>
+   *  can be useful when computing state-dependent model quantities that require <br>
+   *  realization to the Dynamics stage or later.<br>
    *  The function used to fit the controls can either be GCVSpline or<br>
    *  PiecewiseLinearFunction.<br>
    *  
@@ -51,7 +55,8 @@ public class opensimMoco {
    *  with time stepping. Use integratorAccuracy to override the default setting.<br>
    * <br>
    *  Note: This function expects all Actuator%s in the model to be in the Model's<br>
-   *  ForceSet.<br>
+   *  ForceSet andexpects all Controller%s in the model to be in the Model's <br>
+   *  ControllerSet.<br>
    *  
    */
   public static MocoTrajectory simulateTrajectoryWithTimeStepping(MocoTrajectory trajectory, Model model, double integratorAccuracy) {
@@ -66,7 +71,8 @@ public class opensimMoco {
    *  with time stepping. Use integratorAccuracy to override the default setting.<br>
    * <br>
    *  Note: This function expects all Actuator%s in the model to be in the Model's<br>
-   *  ForceSet.<br>
+   *  ForceSet andexpects all Controller%s in the model to be in the Model's <br>
+   *  ControllerSet.<br>
    *  
    */
   public static MocoTrajectory simulateTrajectoryWithTimeStepping(MocoTrajectory trajectory, Model model) {
@@ -305,7 +311,9 @@ public class opensimMoco {
    *  distinguish between right ("<>_r") and left ("<>_l") forces, centers of<br>
    *  pressure, and torques. Centers of pressure are computed assuming the<br>
    *  that the contact plane's normal is in the y-direction, which is the OpenSim<br>
-   *  convention.<br>
+   *  convention. Torques are computed based on the center of pressure<br>
+   *  representation of the ground reaction forces: a "vertical" torque in the <br>
+   *  y-direction and zero torque in the other directions.<br>
    * <br>
    *  The forces and torques are computed from the first six outputs of<br>
    *  getRecordValues(), while the centers of pressure are computed from the second<br>
@@ -320,20 +328,20 @@ public class opensimMoco {
    *  In general, this utility needs getRecordValues() to report the<br>
    *  following force and torque information at the specified indices:<br>
    * <br>
-   *  index - component (body)<br>
-   *  ------------------------<br>
-   *      0 - force-x (foot)<br>
-   *      1 - force-y (foot)<br>
-   *      2 - force-z (foot)<br>
-   *      3 - torque-x (foot)<br>
-   *      4 - torque-y (foot)<br>
-   *      5 - torque-z (foot)<br>
-   *      6 - force-x (contact plane)<br>
-   *      7 - force-y (contact plane)<br>
-   *      8 - force-z (contact plane)<br>
-   *      9 - torque-x (contact plane)<br>
-   *     10 - torque-y (contact plane)<br>
-   *     11 - torque-z (contact plane)<br>
+   *  index | component (body)<br>
+   *  ----- | ----------------<br>
+   *      0 | force-x (foot)<br>
+   *      1 | force-y (foot)<br>
+   *      2 | force-z (foot)<br>
+   *      3 | torque-x (foot)<br>
+   *      4 | torque-y (foot)<br>
+   *      5 | torque-z (foot)<br>
+   *      6 | force-x (contact plane)<br>
+   *      7 | force-y (contact plane)<br>
+   *      8 | force-z (contact plane)<br>
+   *      9 | torque-x (contact plane)<br>
+   *     10 | torque-y (contact plane)<br>
+   *     11 | torque-z (contact plane)<br>
    * <br>
    *  
    */
@@ -347,6 +355,29 @@ public class opensimMoco {
    */
   public static TimeSeriesTable createExternalLoadsTableForGait(Model model, MocoTrajectory trajectory, StdVectorString forcePathsRightFoot, StdVectorString forcePathsLeftFoot) {
     return new TimeSeriesTable(opensimMocoJNI.createExternalLoadsTableForGait__SWIG_1(Model.getCPtr(model), model, MocoTrajectory.getCPtr(trajectory), trajectory, StdVectorString.getCPtr(forcePathsRightFoot), forcePathsRightFoot, StdVectorString.getCPtr(forcePathsLeftFoot), forcePathsLeftFoot), true);
+  }
+
+  /**
+   *  Compute the set of generalized coordinate forces from the provided Model and <br>
+   *  MocoTrajectory. The MocoTrajectory should be compatible with the provided <br>
+   *  Model (e.g., generated from a MocoStudy with the same Model). Only the model<br>
+   *  Force%s that are specified in `forcePaths` are applied to the model when<br>
+   *  calculating the generalized forces.<br>
+   * <br>
+   *  `SimbodyMatterSubsystem::calcResidualForce()` is used to calculate the joint<br>
+   *  moments. This takes the set of Lagrange multipliers from the MocoTrajectory<br>
+   *  and uses them to apply the correct constraint forces to the model.<br>
+   * <br>
+   *  The generalized coordinate forces are returned as a TimeSeriesTable, where<br>
+   *  the column labels match the convention used by the InverseDynamicsTool: <br>
+   *  the coordinates names with suffixes denoting whether they are translational<br>
+   *  (e.g. `pelvis_tx_force`) or rotational (e.g., `ankle_angle_r_moment`)<br>
+   *  generalized forces.<br>
+   * <br>
+   *  
+   */
+  public static TimeSeriesTable calcGeneralizedForces(Model model, MocoTrajectory trajectory, StdVectorString forcePaths) {
+    return new TimeSeriesTable(opensimMocoJNI.calcGeneralizedForces(Model.getCPtr(model), model, MocoTrajectory.getCPtr(trajectory), trajectory, StdVectorString.getCPtr(forcePaths), forcePaths), true);
   }
 
   /**
@@ -372,6 +403,11 @@ public class opensimMoco {
    * <br>
    *  Note: Parameters and Lagrange multipliers in the MocoTrajectory are **not**<br>
    *        applied to the model.<br>
+   * <br>
+   *  Note: If the MocoTrajectory was generated from a MocoStudy with <br>
+   *        Controller%s in the model, first call <br>
+   *        MocoTrajectory::generateControlsFromModelControllers() to populate the<br>
+   *        trajectory with the correct model controls.<br>
    *  
    */
   public static TimeSeriesTable analyzeMocoTrajectory(Model model, MocoTrajectory trajectory, StdVectorString outputPaths) {
@@ -401,6 +437,11 @@ public class opensimMoco {
    * <br>
    *  Note: Parameters and Lagrange multipliers in the MocoTrajectory are **not**<br>
    *        applied to the model.<br>
+   * <br>
+   *  Note: If the MocoTrajectory was generated from a MocoStudy with <br>
+   *        Controller%s in the model, first call <br>
+   *        MocoTrajectory::generateControlsFromModelControllers() to populate the<br>
+   *        trajectory with the correct model controls.<br>
    *  
    */
   public static TimeSeriesTableVec3 analyzeMocoTrajectoryVec3(Model model, MocoTrajectory trajectory, StdVectorString outputPaths) {
@@ -430,10 +471,49 @@ public class opensimMoco {
    * <br>
    *  Note: Parameters and Lagrange multipliers in the MocoTrajectory are **not**<br>
    *        applied to the model.<br>
+   * <br>
+   *  Note: If the MocoTrajectory was generated from a MocoStudy with <br>
+   *        Controller%s in the model, first call <br>
+   *        MocoTrajectory::generateControlsFromModelControllers() to populate the<br>
+   *        trajectory with the correct model controls.<br>
    *  
    */
   public static TimeSeriesTableSpatialVec analyzeMocoTrajectorySpatialVec(Model model, MocoTrajectory trajectory, StdVectorString outputPaths) {
     return new TimeSeriesTableSpatialVec(opensimMocoJNI.analyzeMocoTrajectorySpatialVec(Model.getCPtr(model), model, MocoTrajectory.getCPtr(trajectory), trajectory, StdVectorString.getCPtr(outputPaths), outputPaths), true);
+  }
+
+  /**
+   *  Calculate the requested outputs using the model in the problem and the<br>
+   *  provided StatesTrajectory and controls table.<br>
+   *  The controls table is used to set the model's controls vector.<br>
+   *  We assume the StatesTrajectory and controls table contain the same time<br>
+   *  points.<br>
+   *  The output paths can be regular expressions. For example,<br>
+   *  ".*activation" gives the activation of all muscles.<br>
+   * <br>
+   *  The output paths must correspond to outputs that match the type provided in<br>
+   *  the template argument, otherwise they are not included in the report.<br>
+   * <br>
+   *  Note: The provided trajectory is not modified to satisfy kinematic<br>
+   *  constraints, but SimTK::Motions in the Model (e.g., PositionMotion) are<br>
+   *  applied. Therefore, this function expects that you've provided a trajectory<br>
+   *  that already satisfies kinematic constraints. If your provided trajectory<br>
+   *  does not satisfy kinematic constraints, many outputs will be incorrect.<br>
+   *  For example, in a model with a patella whose location is determined by a<br>
+   *  CoordinateCouplerConstraint, the length of a muscle that crosses the patella<br>
+   *  will be incorrect.<br>
+   * <br>
+   *  Note: Parameters and Lagrange multipliers in the MocoTrajectory are **not**<br>
+   *        applied to the model.<br>
+   * <br>
+   *  Note: If the MocoTrajectory was generated from a MocoStudy with <br>
+   *        Controller%s in the model, first call <br>
+   *        MocoTrajectory::generateControlsFromModelControllers() to populate the<br>
+   *        trajectory with the correct model controls.<br>
+   *  
+   */
+  public static TimeSeriesTableRotation analyzeMocoTrajectoryRotation(Model model, MocoTrajectory trajectory, StdVectorString outputPaths) {
+    return new TimeSeriesTableRotation(opensimMocoJNI.analyzeMocoTrajectoryRotation(Model.getCPtr(model), model, MocoTrajectory.getCPtr(trajectory), trajectory, StdVectorString.getCPtr(outputPaths), outputPaths), true);
   }
 
 }

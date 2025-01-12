@@ -12,6 +12,36 @@ package org.opensim.modeling;
  * PrescribedController is a concrete Controller that specifies functions that <br>
  * prescribe the control values of its actuators as a function of time.<br>
  * <br>
+ * The control functions are specified in the `ControlFunctions` property. Use <br>
+ * `prescribeControlForActuator()` to assign a control function to an actuator <br>
+ * based on the name or path of the actuator. After connecting the controller to <br>
+ * the model, the added control function will be placed at the correct index in <br>
+ * the `ControlFunctions` property. If modifying the `ControlFunctions` property<br>
+ * directly, the number and order of functions must match the number and order <br>
+ * of actuators connected to the controller. However, it is recommended to use<br>
+ * `prescribeControlForActuator()` to ensure the correct mapping between <br>
+ * actuator and control function.<br>
+ * <br>
+ * When loading from file, the order of the control functions in the file must<br>
+ * match the order of actuators connected to the controller. If <br>
+ * `prescribeControlForActuator()` is used to assign control functions, the <br>
+ * control functions will be stored in the correct order in the <br>
+ * `ControlFunctions` when saving the controller to file (since they are <br>
+ * reordered as described above).<br>
+ * <br>
+ * A controls storage file can be specified in the `controls_file` property.<br>
+ * Each column must be either the name or path of an actuator in the model. If<br>
+ * the actuator name is used as the column label, the first actuator with a <br>
+ * matching name will be connected to the controller and assigned a control <br>
+ * function based on the column data. Using actuator paths in the column labels<br>
+ * is recommended to avoid ambiguity. Finally, any actuators with existing <br>
+ * control functions will be ignored when setting controls from file.<br>
+ * <br>
+ * Note: Prior to OpenSim 4.6, PrescribedController support setting a prescribed<br>
+ *       control based on the actuator's index in the `ControlFunctions`<br>
+ *       property. This interface is deprecated and will be removed in a future<br>
+ *       release.<br>
+ * <br>
  * @author Ajay Seth
  */
 public class PrescribedController extends Controller {
@@ -74,9 +104,6 @@ public class PrescribedController extends Controller {
     return opensimSimulationJNI.PrescribedController_getConcreteClassName(swigCPtr, this);
   }
 
-  /**
-   *  FunctionSet of prescribed controls associated with each actuator  
-   */
   public void copyProperty_ControlFunctions(PrescribedController source) {
     opensimSimulationJNI.PrescribedController_copyProperty_ControlFunctions(swigCPtr, this, PrescribedController.getCPtr(source), source);
   }
@@ -113,9 +140,6 @@ public class PrescribedController extends Controller {
     opensimSimulationJNI.PrescribedController_set_ControlFunctions__SWIG_1(swigCPtr, this, FunctionSet.getCPtr(value), value);
   }
 
-  /**
-   *  (Optional) prescribed controls from a storage file  
-   */
   public void copyProperty_controls_file(PrescribedController source) {
     opensimSimulationJNI.PrescribedController_copyProperty_controls_file(swigCPtr, this, PrescribedController.getCPtr(source), source);
   }
@@ -156,9 +180,6 @@ public class PrescribedController extends Controller {
     opensimSimulationJNI.PrescribedController_set_controls_file__SWIG_1(swigCPtr, this, value);
   }
 
-  /**
-   *  (Optional) interpolation method for controls in storage.  
-   */
   public void copyProperty_interpolation_method(PrescribedController source) {
     opensimSimulationJNI.PrescribedController_copyProperty_interpolation_method(swigCPtr, this, PrescribedController.getCPtr(source), source);
   }
@@ -237,23 +258,21 @@ public class PrescribedController extends Controller {
   }
 
   /**
-   *  Assign a prescribed control function for the desired actuator identified <br>
-   *  by its index. Controller takes ownership of the function.<br>
-   *  @param index                the actuator's index in the controller's set<br>
-   *  @param prescribedFunction   the actuator's control function
+   *  Assign a prescribed control function for the desired actuator identified<br>
+   *  by the provided label. The label can be either the name of the actuator,<br>
+   *  or the absolute path to the actuator in the model.<br>
+   *  @param actuLabel            label for the actuator in the controller<br>
+   *  @param prescribedFunction   the actuator's control function<br>
+   * <br>
+   *  Note: As of OpenSim 4.6, PrescribedController no longer takes ownership<br>
+   *        of the passed in Function and instead makes a copy.
    */
-  public void prescribeControlForActuator_private(int index, Function prescribedFunction) {
-    opensimSimulationJNI.PrescribedController_prescribeControlForActuator_private__SWIG_0(swigCPtr, this, index, Function.getCPtr(prescribedFunction), prescribedFunction);
+  public void prescribeControlForActuator_private(String actuLabel, Function prescribedFunction) {
+    opensimSimulationJNI.PrescribedController_prescribeControlForActuator_private__SWIG_0(swigCPtr, this, actuLabel, Function.getCPtr(prescribedFunction), prescribedFunction);
   }
 
-  /**
-   *  Assign a prescribed control function for the desired actuator identified<br>
-   *  by its name. Controller takes ownership of the function.<br>
-   *  @param actName                the actuator's name in the controller's set<br>
-   *  @param prescribedFunction     the actuator's control function
-   */
-  public void prescribeControlForActuator_private(String actName, Function prescribedFunction) {
-    opensimSimulationJNI.PrescribedController_prescribeControlForActuator_private__SWIG_1(swigCPtr, this, actName, Function.getCPtr(prescribedFunction), prescribedFunction);
+  public void prescribeControlForActuator_private(int index, Function prescribedFunction) {
+    opensimSimulationJNI.PrescribedController_prescribeControlForActuator_private__SWIG_1(swigCPtr, this, index, Function.getCPtr(prescribedFunction), prescribedFunction);
   }
 
 }

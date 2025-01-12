@@ -167,6 +167,35 @@ public class MocoPhase extends OpenSimObject {
         setControlInfoPattern(pattern, this.convertArrayToMB(b),
                 this.convertArrayToMIB(ib), this.convertArrayToMFB(fb));
     }
+    
+    public void setInputControlInfo(String name, double[] b) throws Exception {
+        setInputControlInfo(name, this.convertArrayToMB(b));
+    }
+    public void setInputControlInfo(String name, double[] b, double[] ib)
+        throws Exception {
+        setInputControlInfo(name, this.convertArrayToMB(b),
+                this.convertArrayToMIB(ib));
+    }
+    public void setInputControlInfo(String name, double[] b, double[] ib, double[] fb)
+        throws Exception {
+        setInputControlInfo(name, this.convertArrayToMB(b),
+                this.convertArrayToMIB(ib), this.convertArrayToMFB(fb));
+    }
+    public void setInputControlInfoPattern(String pattern, double[] b) 
+        throws Exception {
+        setInputControlInfoPattern(pattern, this.convertArrayToMB(b));
+    }
+    public void setInputControlInfoPattern(String pattern, double[] b, double[] ib)
+        throws Exception {
+        setInputControlInfoPattern(pattern, this.convertArrayToMB(b),
+                this.convertArrayToMIB(ib));
+    }
+    public void 
+    setInputControlInfoPattern(String pattern, double[] b, double[] ib, double[] fb) 
+        throws Exception {
+        setInputControlInfoPattern(pattern, this.convertArrayToMB(b),
+                this.convertArrayToMIB(ib), this.convertArrayToMFB(fb));
+    }
 
   public static MocoPhase safeDownCast(OpenSimObject obj) {
     long cPtr = opensimMocoJNI.MocoPhase_safeDownCast(OpenSimObject.getCPtr(obj), obj);
@@ -531,6 +560,42 @@ public class MocoPhase extends OpenSimObject {
   }
 
   /**
+   *  Set information about a single Input control variable in this phase.<br>
+   *  Similar to setControlInfo(). The name for an Input control follows the <br>
+   *  format &lt;InputController_path&gt;/&lt;Input_label&gt; (e.g.,<br>
+   *  "/my_input_controller/input_control_0"). Input labels for an <br>
+   *  InputController can be obtained using <br>
+   *  InputController::getInputControlLabels().
+   */
+  public void setInputControlInfo(String name, MocoBounds arg1, MocoInitialBounds arg2, MocoFinalBounds arg3) {
+    opensimMocoJNI.MocoPhase_setInputControlInfo__SWIG_0(swigCPtr, this, name, MocoBounds.getCPtr(arg1), arg1, MocoInitialBounds.getCPtr(arg2), arg2, MocoFinalBounds.getCPtr(arg3), arg3);
+  }
+
+  /**
+   *  Set information about a single Input control variable in this phase.<br>
+   *  Similar to setControlInfo(). The name for an Input control follows the <br>
+   *  format &lt;InputController_path&gt;/&lt;Input_label&gt; (e.g.,<br>
+   *  "/my_input_controller/input_control_0"). Input labels for an <br>
+   *  InputController can be obtained using <br>
+   *  InputController::getInputControlLabels().
+   */
+  public void setInputControlInfo(String name, MocoBounds arg1, MocoInitialBounds arg2) {
+    opensimMocoJNI.MocoPhase_setInputControlInfo__SWIG_1(swigCPtr, this, name, MocoBounds.getCPtr(arg1), arg1, MocoInitialBounds.getCPtr(arg2), arg2);
+  }
+
+  /**
+   *  Set information about a single Input control variable in this phase.<br>
+   *  Similar to setControlInfo(). The name for an Input control follows the <br>
+   *  format &lt;InputController_path&gt;/&lt;Input_label&gt; (e.g.,<br>
+   *  "/my_input_controller/input_control_0"). Input labels for an <br>
+   *  InputController can be obtained using <br>
+   *  InputController::getInputControlLabels().
+   */
+  public void setInputControlInfo(String name, MocoBounds arg1) {
+    opensimMocoJNI.MocoPhase_setInputControlInfo__SWIG_2(swigCPtr, this, name, MocoBounds.getCPtr(arg1), arg1);
+  }
+
+  /**
    *  Set the bounds on generalized speed state variables<br>
    *  for which explicit bounds are not set.
    */
@@ -544,7 +609,7 @@ public class MocoPhase extends OpenSimObject {
    *  activations, etc. Infos provided via setControlInfoPattern() take<br>
    *  precedence over the default values from the model. Infos provided via<br>
    *  setControlInfo() take precedence over infos provided with<br>
-   *  setControlInfoPattern().  If a state variable name matches multiple<br>
+   *  setControlInfoPattern(). If a control variable name matches multiple<br>
    *  patterns, the info provided with the last pattern is used for that<br>
    *  control variable.
    */
@@ -558,7 +623,7 @@ public class MocoPhase extends OpenSimObject {
    *  activations, etc. Infos provided via setControlInfoPattern() take<br>
    *  precedence over the default values from the model. Infos provided via<br>
    *  setControlInfo() take precedence over infos provided with<br>
-   *  setControlInfoPattern().  If a state variable name matches multiple<br>
+   *  setControlInfoPattern(). If a control variable name matches multiple<br>
    *  patterns, the info provided with the last pattern is used for that<br>
    *  control variable.
    */
@@ -572,7 +637,7 @@ public class MocoPhase extends OpenSimObject {
    *  activations, etc. Infos provided via setControlInfoPattern() take<br>
    *  precedence over the default values from the model. Infos provided via<br>
    *  setControlInfo() take precedence over infos provided with<br>
-   *  setControlInfoPattern().  If a state variable name matches multiple<br>
+   *  setControlInfoPattern(). If a control variable name matches multiple<br>
    *  patterns, the info provided with the last pattern is used for that<br>
    *  control variable.
    */
@@ -581,10 +646,49 @@ public class MocoPhase extends OpenSimObject {
   }
 
   /**
+   *  Set information for Input control variables whose names match the <br>
+   *  provided regular expression. Infos provided via <br>
+   *  setInputControlInfo() take precedence over infos provided with <br>
+   *  setInputControlInfoPatter(). If an Input control variable name matches<br>
+   *  multiple patterns, the info provided with the last pattern is used for<br>
+   *  that Input control variable.
+   */
+  public void setInputControlInfoPattern(String pattern, MocoBounds arg1, MocoInitialBounds arg2, MocoFinalBounds arg3) {
+    opensimMocoJNI.MocoPhase_setInputControlInfoPattern__SWIG_0(swigCPtr, this, pattern, MocoBounds.getCPtr(arg1), arg1, MocoInitialBounds.getCPtr(arg2), arg2, MocoFinalBounds.getCPtr(arg3), arg3);
+  }
+
+  /**
+   *  Set information for Input control variables whose names match the <br>
+   *  provided regular expression. Infos provided via <br>
+   *  setInputControlInfo() take precedence over infos provided with <br>
+   *  setInputControlInfoPatter(). If an Input control variable name matches<br>
+   *  multiple patterns, the info provided with the last pattern is used for<br>
+   *  that Input control variable.
+   */
+  public void setInputControlInfoPattern(String pattern, MocoBounds arg1, MocoInitialBounds arg2) {
+    opensimMocoJNI.MocoPhase_setInputControlInfoPattern__SWIG_1(swigCPtr, this, pattern, MocoBounds.getCPtr(arg1), arg1, MocoInitialBounds.getCPtr(arg2), arg2);
+  }
+
+  /**
+   *  Set information for Input control variables whose names match the <br>
+   *  provided regular expression. Infos provided via <br>
+   *  setInputControlInfo() take precedence over infos provided with <br>
+   *  setInputControlInfoPatter(). If an Input control variable name matches<br>
+   *  multiple patterns, the info provided with the last pattern is used for<br>
+   *  that Input control variable.
+   */
+  public void setInputControlInfoPattern(String pattern, MocoBounds arg1) {
+    opensimMocoJNI.MocoPhase_setInputControlInfoPattern__SWIG_2(swigCPtr, this, pattern, MocoBounds.getCPtr(arg1), arg1);
+  }
+
+  /**
    *  For muscles without explicit activation bounds, set the bounds for<br>
    *  muscle activation (if activation dynamics are enabled) from the bounds<br>
    *  for muscle control (excitation), using min/max control if explicit<br>
-   *  control bounds are not provided. Default: true.
+   *  control bounds are not provided. Default: true.<br>
+   * <br>
+   *  Note: This includes muscles controlled by user-added Controllers in the<br>
+   *        model.
    */
   public void setBoundActivationFromExcitation(boolean tf) {
     opensimMocoJNI.MocoPhase_setBoundActivationFromExcitation(swigCPtr, this, tf);
