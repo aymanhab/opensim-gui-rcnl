@@ -341,16 +341,34 @@ public class JointPersonalizationJPanel extends BaseToolPanel  implements Observ
         // For each JMPTask in tasklist, force write of parent_frame_transformation, child_frame_transformation
         // dObject is an instance of JointModelPersonalizationTool
         AbstractProperty ap = dObject.getPropertyByName("JMPTaskList");
+        ap.setValueIsDefault(false);
         PropertyObjectList olist = PropertyObjectList.getAs(ap);
         for (int i=0; i< olist.size(); i++){
+            
             OpenSimObject ithTask = olist.getValue(i);
             AbstractProperty apJnts = ithTask.getPropertyByName("JMPJointSet");
+            ithTask.updPropertyByName("is_enabled").setValueIsDefault(false);
+            ithTask.updPropertyByName("index").setValueIsDefault(false);
+            ithTask.updPropertyByName("marker_file_name").setValueIsDefault(false);
+            ithTask.updPropertyByName("time_range").setValueIsDefault(false);
             PropertyObjectList poJointList = PropertyObjectList.updAs(apJnts);
              for (int j=0; j<poJointList.size(); j++){
                 poJointList.getValue(j).updPropertyByName("parent_frame_transformation").setValueIsDefault(false);
                 poJointList.getValue(j).updPropertyByName("child_frame_transformation").setValueIsDefault(false);
              }
         }
+        dObject.updPropertyByName("results_directory").setValueIsDefault(false);
+        dObject.updPropertyByName("input_directory").setValueIsDefault(false);
+        dObject.updPropertyByName("input_model_file").setValueIsDefault(false);
+        dObject.updPropertyByName("output_model_file").setValueIsDefault(false);
+        dObject.updPropertyByName("allowable_error").setValueIsDefault(false);
+        dObject.updPropertyByName("accuracy").setValueIsDefault(false);
+        dObject.updPropertyByName("diff_min_change").setValueIsDefault(false);
+        dObject.updPropertyByName("optimality_tolerance").setValueIsDefault(false);
+        dObject.updPropertyByName("function_tolerance").setValueIsDefault(false);
+        dObject.updPropertyByName("step_tolerance").setValueIsDefault(false);
+        dObject.updPropertyByName("max_function_evaluations").setValueIsDefault(false);
+
     }
 
 
