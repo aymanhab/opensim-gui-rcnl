@@ -712,9 +712,51 @@ public class MTPPersonalizationJPanel extends BaseToolPanel  implements Observer
     @Override
     void forceWritableProperties(OpenSimObject dObject) {
         super.forceWritableProperties(dObject); //To change body of generated methods, choose Tools | Templates.
-        dObject.updPropertyByName("MuscleTendonLengthInitialization").setValueIsDefault(false);
-        dObject.updPropertyByName("MTPSynergyExtrapolation").setValueIsDefault(false);
+        dObject.updPropertyByName("results_directory").setValueIsDefault(false);
+        dObject.updPropertyByName("input_model_file").setValueIsDefault(false);
+        dObject.updPropertyByName("input_osimx_file").setValueIsDefault(false);
+        dObject.updPropertyByName("data_directory").setValueIsDefault(false);
+        dObject.updPropertyByName("coordinate_list").setValueIsDefault(false);
+
+        dObject.updPropertyByName("v_max_factor").setValueIsDefault(false);
+        dObject.updPropertyByName("trial_prefixes").setValueIsDefault(false);
+        dObject.updPropertyByName("max_iterations").setValueIsDefault(false);
+        dObject.updPropertyByName("max_function_evaluations").setValueIsDefault(false);
+        dObject.updPropertyByName("step_tolerance").setValueIsDefault(false);
+
+        AbstractProperty mtpMuscleTendonLengthInitialization = dObject.getPropertyByName("MuscleTendonLengthInitialization");
+        mtpMuscleTendonLengthInitialization.setValueIsDefault(false);
+        OpenSimObject mtpMtliProperties = PropertyObjectList.getAs(mtpMuscleTendonLengthInitialization).getValue(0);
+        mtpMtliProperties.updPropertyByName("is_enabled").setValueIsDefault(false);
+        mtpMtliProperties.updPropertyByName("max_normalized_muscle_fiber_length").setValueIsDefault(false);
+        mtpMtliProperties.updPropertyByName("min_normalized_muscle_fiber_length").setValueIsDefault(false);
+        mtpMtliProperties.updPropertyByName("optimize_maximum_muscle_stress").setValueIsDefault(false);
+        mtpMtliProperties.updPropertyByName("optimize_isometric_max_force").setValueIsDefault(false);
+        mtpMtliProperties.updPropertyByName("maximum_muscle_stress").setValueIsDefault(false);
+
+        AbstractProperty mtpSynergyExtrapolation = dObject.getPropertyByName("MTPSynergyExtrapolation");
+        mtpSynergyExtrapolation.setValueIsDefault(false);
+        OpenSimObject mtpSynxProperties = PropertyObjectList.getAs(mtpSynergyExtrapolation).getValue(0);
+        mtpSynxProperties.updPropertyByName("is_enabled").setValueIsDefault(false);
+        mtpSynxProperties.updPropertyByName("task_prefixes").setValueIsDefault(false);
+        mtpSynxProperties.updPropertyByName("matrix_factorization_method").setValueIsDefault(false);
+        mtpSynxProperties.updPropertyByName("number_of_synergies").setValueIsDefault(false);
+        mtpSynxProperties.updPropertyByName("synergy_extrapolation_categorization").setValueIsDefault(false);
+        mtpSynxProperties.updPropertyByName("residual_categorization").setValueIsDefault(false);
+
+
+        AbstractProperty mtpTaskSet = dObject.getPropertyByName("MTPTaskList");
+        PropertyObjectList mtpTaskList = PropertyObjectList.getAs(mtpTaskSet);
+        for (int i=0; i<mtpTaskList.size(); i++){
+            OpenSimObject ithTask = mtpTaskList.getValue(i);
+            ithTask.updPropertyByName("index").setValueIsDefault(false);
+            ithTask.updPropertyByName("muscle_specific_electromechanical_delays").setValueIsDefault(false);
+            ithTask.updPropertyByName("optimize_electromechanical_delays").setValueIsDefault(false);
+            ithTask.updPropertyByName("optimize_activation_time_constants").setValueIsDefault(false);
+            ithTask.updPropertyByName("optimize_activation_nonlinearity_constants").setValueIsDefault(false);
+            ithTask.updPropertyByName("optimize_emg_scale_factors").setValueIsDefault(false);
+            ithTask.updPropertyByName("optimize_optimal_fiber_lengths").setValueIsDefault(false);
+            ithTask.updPropertyByName("optimize_tendon_slack_lengths").setValueIsDefault(false);
+        }
     }
-    
-    
 }
