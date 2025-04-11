@@ -466,6 +466,8 @@ public class GCPPersonalizationJPanel extends BaseToolPanel  implements Observer
         }
         // Set proprties from relative path
         String fullFilename = FileUtils.addExtensionIfNeeded(fileName, ".xml");
+        OpenSimObject obj = gcpPersonalizationToolModel.getToolAsObject();
+        forceWritableProperties(obj);
         gcpPersonalizationToolModel.getToolAsObject().print(fullFilename);
         replaceOpenSimDocumentTags(fullFilename);
         // Restore from model
@@ -510,6 +512,58 @@ public class GCPPersonalizationJPanel extends BaseToolPanel  implements Observer
             editGCPSurfaceButton.setEnabled(sels.length==1);
             deleteGCPSurfaceButton.setEnabled(sels.length>=1);
             
+        }
+    }
+
+    @Override
+    void forceWritableProperties(OpenSimObject dObject) {
+        super.forceWritableProperties(dObject); //To change body of generated methods, choose Tools | Templates.
+        dObject.updPropertyByName("results_directory").setValueIsDefault(false);
+        dObject.updPropertyByName("input_osimx_file").setValueIsDefault(false);
+        dObject.updPropertyByName("input_directory").setValueIsDefault(false);
+        dObject.updPropertyByName("input_model_file").setValueIsDefault(false);
+
+        dObject.updPropertyByName("kinematics_filter_cutoff").setValueIsDefault(false);
+        dObject.updPropertyByName("initialize_resting_spring_length").setValueIsDefault(false);
+        dObject.updPropertyByName("grid_width").setValueIsDefault(false);
+        dObject.updPropertyByName("grid_height").setValueIsDefault(false);
+        dObject.updPropertyByName("initial_resting_spring_length").setValueIsDefault(false);
+        dObject.updPropertyByName("initial_spring_constant").setValueIsDefault(false);
+        dObject.updPropertyByName("initial_damping_factor").setValueIsDefault(false);
+        dObject.updPropertyByName("initial_dynamic_friction_coefficient").setValueIsDefault(false);
+        dObject.updPropertyByName("initial_viscous_friction_coefficient").setValueIsDefault(false);
+        dObject.updPropertyByName("latching_velocity").setValueIsDefault(false);
+        dObject.updPropertyByName("diff_min_change").setValueIsDefault(false);
+        dObject.updPropertyByName("step_tolerance").setValueIsDefault(false);
+        dObject.updPropertyByName("optimality_tolerance").setValueIsDefault(false);
+        dObject.updPropertyByName("function_tolerance").setValueIsDefault(false);
+        dObject.updPropertyByName("max_iterations").setValueIsDefault(false);
+        dObject.updPropertyByName("max_function_evaluations").setValueIsDefault(false);
+
+        AbstractProperty GCPContactSurfaceSet = dObject.getPropertyByName("GCPContactSurfaceSet");
+        GCPContactSurfaceSet.setValueIsDefault(false);
+        PropertyObjectList GCPContactSurfaceList = PropertyObjectList.getAs(GCPContactSurfaceSet);
+        for (int i=0; i<GCPContactSurfaceList.size(); i++){
+            OpenSimObject ithSurface = GCPContactSurfaceList.getValue(i);
+            ithSurface.updPropertyByName("is_left_foot").setValueIsDefault(false);
+            ithSurface.updPropertyByName("belt_speed").setValueIsDefault(false);
+        }
+
+        AbstractProperty gcpTaskSet = dObject.getPropertyByName("GCPTaskList");
+        gcpTaskSet.setValueIsDefault(false);
+        PropertyObjectList gcpTaskList = PropertyObjectList.getAs(gcpTaskSet);
+        for (int i=0; i<gcpTaskList.size(); i++){
+            OpenSimObject ithTask = gcpTaskList.getValue(i);
+            ithTask.updPropertyByName("is_enabled").setValueIsDefault(false);
+            ithTask.updPropertyByName("index").setValueIsDefault(false);
+            ithTask.updPropertyByName("springConstants").setValueIsDefault(false);
+            ithTask.updPropertyByName("dampingFactor").setValueIsDefault(false);
+            ithTask.updPropertyByName("dynamicFrictionCoefficient").setValueIsDefault(false);
+            ithTask.updPropertyByName("viscousFrictionCoefficient").setValueIsDefault(false);
+            ithTask.updPropertyByName("restingSpringLength").setValueIsDefault(false);
+            ithTask.updPropertyByName("kinematicsBSplineCoefficients").setValueIsDefault(false);
+            ithTask.updPropertyByName("neighborStandardDeviation").setValueIsDefault(false);
+
         }
     }
 }
