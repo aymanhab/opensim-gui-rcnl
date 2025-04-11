@@ -188,7 +188,17 @@ public class TreatmentOptimizationToolModel {
 
     void setSurrogateModelDir(String fileName) {
         propSurrogateModelDirString.setValue(fileName);
+        markSynergyControllerModified();
     }
+
+    public void markSynergyControllerModified() {
+        toolAsObject.updPropertyByName("RCNLSynergyController").setValueIsDefault(false);
+    }
+    
+    public void markTorqueControllerModified() {
+        toolAsObject.updPropertyByName("RCNLTorqueController").setValueIsDefault(false);
+    }
+    
     
     boolean getOptimizeSynergyVector() {
         if (propOptimizeForSynvergyVectorBool.size()==1)
@@ -198,6 +208,7 @@ public class TreatmentOptimizationToolModel {
 
     void setOptimizeSynergyVector(boolean newValue) {
         propOptimizeForSynvergyVectorBool.setValue(newValue);
+        markSynergyControllerModified();
     }
     
     PropertyStringList getRCNLSynergyCoordinateListString() {
