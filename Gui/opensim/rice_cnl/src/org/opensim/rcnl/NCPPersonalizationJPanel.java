@@ -644,7 +644,34 @@ public class NCPPersonalizationJPanel extends BaseToolPanel  implements Observer
     @Override
     void forceWritableProperties(OpenSimObject dObject) {
         super.forceWritableProperties(dObject); //To change body of generated methods, choose Tools | Templates.
-        dObject.updPropertyByName("MuscleTendonLengthInitialization").setValueIsDefault(false);
+        dObject.updPropertyByName("results_directory").setValueIsDefault(false);
+        dObject.updPropertyByName("input_model_file").setValueIsDefault(false);
+        dObject.updPropertyByName("input_osimx_file").setValueIsDefault(false);
+        dObject.updPropertyByName("data_directory").setValueIsDefault(false);
+        dObject.updPropertyByName("coordinate_list").setValueIsDefault(false);
+
+        dObject.updPropertyByName("v_max_factor").setValueIsDefault(false);
+        dObject.updPropertyByName("activation_muscle_groups").setValueIsDefault(false);
+        dObject.updPropertyByName("normalized_fiber_length_muscle_groups").setValueIsDefault(false);
+        dObject.updPropertyByName("trial_prefixes").setValueIsDefault(false);
+        dObject.updPropertyByName("diff_min_change").setValueIsDefault(false);
+        dObject.updPropertyByName("step_tolerance").setValueIsDefault(false);
+        dObject.updPropertyByName("optimality_tolerance").setValueIsDefault(false);
+        dObject.updPropertyByName("function_tolerance").setValueIsDefault(false);
+        dObject.updPropertyByName("max_iterations").setValueIsDefault(false);
+        dObject.updPropertyByName("max_function_evaluations").setValueIsDefault(false);
+        dObject.updPropertyByName("enforce_bilateral_symmetry").setValueIsDefault(false);
+
+        if (jCheckBoxMTPInitialization.isSelected()) {
+            AbstractProperty ncpMuscleTendonLengthInitialization = dObject.getPropertyByName("MuscleTendonLengthInitialization");
+            ncpMuscleTendonLengthInitialization.setValueIsDefault(false);
+            OpenSimObject ncpMtliProperties = PropertyObjectList.getAs(ncpMuscleTendonLengthInitialization).getValue(0);
+            ncpMtliProperties.updPropertyByName("max_normalized_muscle_fiber_length").setValueIsDefault(false);
+            ncpMtliProperties.updPropertyByName("min_normalized_muscle_fiber_length").setValueIsDefault(false);
+            ncpMtliProperties.updPropertyByName("optimize_maximum_muscle_stress").setValueIsDefault(false);
+            ncpMtliProperties.updPropertyByName("optimize_isometric_max_force").setValueIsDefault(false);
+            ncpMtliProperties.updPropertyByName("maximum_muscle_stress").setValueIsDefault(false);
+        }
     }
 
 }
