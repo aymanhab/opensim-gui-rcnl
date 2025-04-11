@@ -1108,14 +1108,55 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
    }
 
     @Override
+    // void forceWritableProperties(OpenSimObject dObject) {
+    //     super.forceWritableProperties(dObject); //To change body of generated methods, choose Tools | Templates.
+        // AbstractProperty ap = dObject.getPropertyByName("RCNLCostTermSet");
+        // PropertyObjectList olist = PropertyObjectList.getAs(ap);
+        // for (int i=0; i< olist.size(); i++){
+        //     OpenSimObject costterm = olist.getValue(i);
+        //     costterm.updPropertyByName("max_allowable_error").setValueIsDefault(false);
+        // }
+    //     dObject.updPropertyByName("trial_name").setValueIsDefault(false);
+    //     dObject.updPropertyByName("joint_position_range_scale_factor").setValueIsDefault(false);
+    //     dObject.updPropertyByName("joint_velocity_range_scale_factor").setValueIsDefault(false);
+    //     dObject.updPropertyByName("joint_acceleration_range_scale_factor").setValueIsDefault(false);
+    // }
+
     void forceWritableProperties(OpenSimObject dObject) {
         super.forceWritableProperties(dObject); //To change body of generated methods, choose Tools | Templates.
-        AbstractProperty ap = dObject.getPropertyByName("RCNLCostTermSet");
-        PropertyObjectList olist = PropertyObjectList.getAs(ap);
-        for (int i=0; i< olist.size(); i++){
-            OpenSimObject costterm = olist.getValue(i);
-            costterm.updPropertyByName("max_allowable_error").setValueIsDefault(false);
+        
+        dObject.updPropertyByName("results_directory").setValueIsDefault(false);
+        dObject.updPropertyByName("tracked_quantities_directory").setValueIsDefault(false);
+        dObject.updPropertyByName("initial_guess_directory").setValueIsDefault(false);
+        dObject.updPropertyByName("input_model_file").setValueIsDefault(false);
+        dObject.updPropertyByName("input_osimx_file").setValueIsDefault(false);
+        dObject.updPropertyByName("optimal_control_solver_settings_file").setValueIsDefault(false);
+        dObject.updPropertyByName("trial_name").setValueIsDefault(false);
+        dObject.updPropertyByName("states_coordinate_list").setValueIsDefault(false);
+        dObject.updPropertyByName("optimal_control_solver_settings_file").setValueIsDefault(false);
+        dObject.updPropertyByName("optimal_control_solver_settings_file").setValueIsDefault(false);
+
+
+
+        AbstractProperty costTermSet = dObject.getPropertyByName("RCNLCostTermSet");
+        costTermSet.setValueIsDefault(false);
+        PropertyObjectList costTermList = PropertyObjectList.getAs(costTermSet);
+        for (int i=0; i< costTermList.size(); i++){
+            OpenSimObject costTerm = costTermList.getValue(i);
+            costTerm.updPropertyByName("max_allowable_error").setValueIsDefault(false);
         }
+        AbstractProperty constraintTermSet = dObject.getPropertyByName("RCNLConstraintTermSet");
+        constraintTermSet.setValueIsDefault(false);
+        PropertyObjectList constraintTermList = PropertyObjectList.getAs(constraintTermSet);
+        for (int i=0; i< constraintTermList.size(); i++){
+            OpenSimObject constraintTerm = constraintTermList.getValue(i);
+            constraintTerm.updPropertyByName("max_error").setValueIsDefault(false);
+            constraintTerm.updPropertyByName("min_error").setValueIsDefault(false);
+        }
+        dObject.updPropertyByName("trial_name").setValueIsDefault(false);
+        dObject.updPropertyByName("joint_position_range_scale_factor").setValueIsDefault(false);
+        dObject.updPropertyByName("joint_velocity_range_scale_factor").setValueIsDefault(false);
+        dObject.updPropertyByName("joint_acceleration_range_scale_factor").setValueIsDefault(false);
     }
 
     
