@@ -718,6 +718,11 @@ public class MTPPersonalizationJPanel extends BaseToolPanel  implements Observer
         dObject.updPropertyByName("data_directory").setValueIsDefault(false);
         dObject.updPropertyByName("coordinate_list").setValueIsDefault(false);
 
+        dObject.updPropertyByName("activation_muscle_groups").setValueIsDefault(false);
+        dObject.updPropertyByName("normalized_fiber_length_muscle_groups").setValueIsDefault(false);
+        dObject.updPropertyByName("missing_emg_channel_muscle_groups").setValueIsDefault(false);
+        dObject.updPropertyByName("collected_emg_channel_muscle_groups").setValueIsDefault(false);
+
         dObject.updPropertyByName("v_max_factor").setValueIsDefault(false);
         dObject.updPropertyByName("trial_prefixes").setValueIsDefault(false);
         dObject.updPropertyByName("max_iterations").setValueIsDefault(false);
