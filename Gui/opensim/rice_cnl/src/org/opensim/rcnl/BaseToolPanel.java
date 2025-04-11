@@ -142,7 +142,7 @@ public abstract class BaseToolPanel extends JPanel implements ActionListener, Ob
             for (int i = 0; i < nodeList.getLength(); i++) {
                 Node oldNode = nodeList.item(i);
                 Element element = (Element) oldNode; 
-                if (element != null) { element.setAttribute("Version", "1.0.0"); }
+                if (element != null) { element.setAttribute("Version", "1.4.0"); }
                 doc.renameNode(oldNode, oldNode.getNamespaceURI(), "NMSMPipelineDocument");
             }
             TransformerFactory transformerFactory = TransformerFactory.newInstance();
