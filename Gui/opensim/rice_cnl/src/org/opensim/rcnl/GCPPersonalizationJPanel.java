@@ -563,7 +563,10 @@ public class GCPPersonalizationJPanel extends BaseToolPanel  implements Observer
             ithTask.updPropertyByName("restingSpringLength").setValueIsDefault(false);
             ithTask.updPropertyByName("kinematicsBSplineCoefficients").setValueIsDefault(false);
             ithTask.updPropertyByName("neighborStandardDeviation").setValueIsDefault(false);
-
+            ithTask.updPropertyByName("electricalCenterX").setValueIsDefault(false);
+            ithTask.updPropertyByName("electricalCenterY").setValueIsDefault(false);
+            ithTask.updPropertyByName("electricalCenterZ").setValueIsDefault(false);
+            ithTask.updPropertyByName("forcePlateRotation").setValueIsDefault(false);
         }
     }
 }
