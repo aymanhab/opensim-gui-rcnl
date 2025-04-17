@@ -65,7 +65,14 @@ public class CostTermModel {
             case "controller":
                 return PropertyStringList.updAs(costTerm.updPropertyByName("controller_list"));
             case "marker":
+                costTerm.getPropertyByName("axes").setValueIsDefault(false);
                 return PropertyStringList.updAs(costTerm.updPropertyByName("marker_list"));
+            case "body":
+                costTerm.getPropertyByName("axes").setValueIsDefault(false);
+                return PropertyStringList.updAs(costTerm.updPropertyByName("body_list"));
+            case "hindfoot_body":
+                costTerm.getPropertyByName("axes").setValueIsDefault(false);
+                return PropertyStringList.updAs(costTerm.updPropertyByName("hindfoot_body_list"));
        }
         return PropertyStringList.updAs(costTerm.updPropertyByName("coordinate_list"));
     }
