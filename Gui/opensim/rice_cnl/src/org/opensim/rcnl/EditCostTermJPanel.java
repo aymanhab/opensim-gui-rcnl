@@ -63,10 +63,8 @@ public class EditCostTermJPanel extends javax.swing.JPanel {
         initComponents(); 
         jCostTermTypeComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(RCNLCostTermsInfo.getCostTermTypes(mode)));
         componentTypes = RCNLCostTermsInfo.getCostTermQuantityTypes(mode);
-        if (mode == TreatmentOptimizationToolModel.Mode.DesignOptimization){
-            // some terms have error center, get array and cache it
-            termWithErrorCenter = RCNLCostTermsInfo.getCostTermErrorCenter(mode);
-        }
+        // some terms have error center, get array and cache it
+        termWithErrorCenter = RCNLCostTermsInfo.getCostTermErrorCenter(mode);
         jCostTermNameTextField.setText(costTerm2Edit.getName());
         jCostTermTypeComboBox.setSelectedItem(saveType);
         jCostTermTypeComboBoxActionPerformed(null);
@@ -325,9 +323,7 @@ public class EditCostTermJPanel extends javax.swing.JPanel {
         AbstractProperty typeProp = costTerm2Edit.getPropertyByName("type");
         PropertyHelper.setValueString(jCostTermTypeComboBox.getSelectedItem().toString(), typeProp);
         // If error center is required, will enable editing, else disable
-        jErrorCenterTextField.setEnabled(
-                mode == TreatmentOptimizationToolModel.Mode.DesignOptimization && 
-                termWithErrorCenter[ndx]=="Y");
+        jErrorCenterTextField.setEnabled(termWithErrorCenter[ndx]=="Y");
         // based on componentType, populate underlying available componentList, if none then disable
         editComonentListButton.setEnabled(!componentType.equalsIgnoreCase("none"));
         costTermModel.setTypeIndex(jCostTermTypeComboBox.getSelectedIndex());
