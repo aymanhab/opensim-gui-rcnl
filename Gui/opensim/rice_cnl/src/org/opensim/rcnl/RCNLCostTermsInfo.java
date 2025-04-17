@@ -93,7 +93,8 @@ public class RCNLCostTermsInfo {
     private static String[] momentList = null;
     private static String[] controller_List = null;
     private static String[] synergy_Groups = null;
-    private static Model currentModel=null;
+    private static String[] bodyList = null;
+    private static Model currentModel = null;
     private static String trackedDir = "";
     private static String initalGuessDir = "";
     private static String osimxFile = "";
@@ -112,6 +113,7 @@ public class RCNLCostTermsInfo {
             loadList = null;
             forceList = null;
             momentList = null;
+            bodyList = null;
         }
 
         ArrayStr componentNames = new ArrayStr();
@@ -200,6 +202,15 @@ public class RCNLCostTermsInfo {
                     populateForcesAndMomentsList();
                 }
                 return (componentType.equalsIgnoreCase("force")?forceList:momentList);
+            case "body":
+            case "hindfoot_body":
+                if (bodyList == null){
+                    model.getBodySet().getNames(componentNames);
+                    availableQuantities = new String[componentNames.getSize()];
+                    componentNames.toVector().copyInto(availableQuantities);
+                    bodyList= availableQuantities;
+                }
+                return bodyList;
         }
         return new String[]{};
     }
@@ -288,6 +299,14 @@ public class RCNLCostTermsInfo {
    }   
 
     static String[] getCostTermErrorCenter(TreatmentOptimizationToolModel.Mode mode) {
-        return designOptimizationCostTerms[2];
+        switch(mode){
+            case TrackingOptimization:
+                return trackingCostTerms[2];
+            case VerificationOptimization:
+                return verificationCostTerms[2];
+            case DesignOptimization:
+                return designOptimizationCostTerms[2];
+        }
+        return new String[]{};
     }
 }
