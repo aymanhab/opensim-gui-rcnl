@@ -62,6 +62,15 @@ public class ConstraintTermModel {
                 return PropertyStringList.updAs(constraintTerm.updPropertyByName("muscle_list"));
             case "synergy_group":
                 return PropertyStringList.updAs(constraintTerm.updPropertyByName("synergy_group_list"));
+            case "marker":
+                constraintTerm.getPropertyByName("axes").setValueIsDefault(false);
+                return PropertyStringList.updAs(constraintTerm.updPropertyByName("marker_list"));
+            case "body":
+                constraintTerm.getPropertyByName("axes").setValueIsDefault(false);
+                return PropertyStringList.updAs(constraintTerm.updPropertyByName("body_list"));
+            case "hindfoot_body":
+                constraintTerm.getPropertyByName("axes").setValueIsDefault(false);
+                return PropertyStringList.updAs(constraintTerm.updPropertyByName("hindfoot_body_list"));
         }
         return PropertyStringList.updAs(constraintTerm.updPropertyByName("coordinate_list"));
     }
