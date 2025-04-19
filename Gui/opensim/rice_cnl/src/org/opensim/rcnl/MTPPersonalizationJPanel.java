@@ -724,7 +724,6 @@ public class MTPPersonalizationJPanel extends BaseToolPanel  implements Observer
         dObject.updPropertyByName("collected_emg_channel_muscle_groups").setValueIsDefault(false);
 
         dObject.updPropertyByName("v_max_factor").setValueIsDefault(false);
-        dObject.updPropertyByName("trial_prefixes").setValueIsDefault(false);
         dObject.updPropertyByName("max_iterations").setValueIsDefault(false);
         dObject.updPropertyByName("max_function_evaluations").setValueIsDefault(false);
         dObject.updPropertyByName("step_tolerance").setValueIsDefault(false);
@@ -743,7 +742,6 @@ public class MTPPersonalizationJPanel extends BaseToolPanel  implements Observer
         mtpSynergyExtrapolation.setValueIsDefault(false);
         OpenSimObject mtpSynxProperties = PropertyObjectList.getAs(mtpSynergyExtrapolation).getValue(0);
         mtpSynxProperties.updPropertyByName("is_enabled").setValueIsDefault(false);
-        mtpSynxProperties.updPropertyByName("task_prefixes").setValueIsDefault(false);
         mtpSynxProperties.updPropertyByName("matrix_factorization_method").setValueIsDefault(false);
         mtpSynxProperties.updPropertyByName("number_of_synergies").setValueIsDefault(false);
         mtpSynxProperties.updPropertyByName("synergy_extrapolation_categorization").setValueIsDefault(false);

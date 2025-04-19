@@ -357,7 +357,6 @@ public class JointPersonalizationJPanel extends BaseToolPanel  implements Observ
                 poJointList.getValue(j).updPropertyByName("child_frame_transformation").setValueIsDefault(false);
              }
         }
-        dObject.updPropertyByName("results_directory").setValueIsDefault(false);
         dObject.updPropertyByName("input_directory").setValueIsDefault(false);
         dObject.updPropertyByName("input_model_file").setValueIsDefault(false);
         dObject.updPropertyByName("output_model_file").setValueIsDefault(false);
