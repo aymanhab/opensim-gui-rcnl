@@ -662,16 +662,16 @@ public class NCPPersonalizationJPanel extends BaseToolPanel  implements Observer
         dObject.updPropertyByName("max_function_evaluations").setValueIsDefault(false);
         dObject.updPropertyByName("enforce_bilateral_symmetry").setValueIsDefault(false);
 
-        if (jCheckBoxMTPInitialization.isSelected()) {
-            AbstractProperty ncpMuscleTendonLengthInitialization = dObject.getPropertyByName("MuscleTendonLengthInitialization");
-            ncpMuscleTendonLengthInitialization.setValueIsDefault(false);
-            OpenSimObject ncpMtliProperties = PropertyObjectList.getAs(ncpMuscleTendonLengthInitialization).getValue(0);
-            ncpMtliProperties.updPropertyByName("max_normalized_muscle_fiber_length").setValueIsDefault(false);
-            ncpMtliProperties.updPropertyByName("min_normalized_muscle_fiber_length").setValueIsDefault(false);
-            ncpMtliProperties.updPropertyByName("optimize_maximum_muscle_stress").setValueIsDefault(false);
-            ncpMtliProperties.updPropertyByName("optimize_isometric_max_force").setValueIsDefault(false);
-            ncpMtliProperties.updPropertyByName("maximum_muscle_stress").setValueIsDefault(false);
-        }
+        AbstractProperty ncpMuscleTendonLengthInitialization = dObject.getPropertyByName("MuscleTendonLengthInitialization");
+        ncpMuscleTendonLengthInitialization.setValueIsDefault(false);
+        OpenSimObject ncpMtliProperties = PropertyObjectList.getAs(ncpMuscleTendonLengthInitialization).getValue(0);
+        ncpMtliProperties.updPropertyByName("is_enabled").setValueIsDefault(false);
+        ncpMtliProperties.updPropertyByName("max_normalized_muscle_fiber_length").setValueIsDefault(false);
+        ncpMtliProperties.updPropertyByName("min_normalized_muscle_fiber_length").setValueIsDefault(false);
+        ncpMtliProperties.updPropertyByName("optimize_maximum_muscle_stress").setValueIsDefault(false);
+        ncpMtliProperties.updPropertyByName("optimize_isometric_max_force").setValueIsDefault(false);
+        ncpMtliProperties.updPropertyByName("maximum_muscle_stress").setValueIsDefault(false);
+        
     }
 
 }
