@@ -22,6 +22,7 @@ import org.openide.util.Exceptions;
 import org.opensim.modeling.AbstractProperty;
 import org.opensim.modeling.Model;
 import org.opensim.modeling.OpenSimObject;
+import org.opensim.modeling.PropertyHelper;
 import org.opensim.modeling.PropertyObjectList;
 import org.opensim.utils.FileUtils;
 import org.opensim.view.pub.OpenSimDB;
@@ -247,6 +248,9 @@ public class JointPersonalizationJPanel extends BaseToolPanel  implements Observ
             jointPersonalizationTaskListModel.addElement(jmpTask);
             AbstractProperty ap = jointPersonalizationToolModel.getToolAsObject().getPropertyByName("JMPTaskList");
             //System.out.println(ap.getTypeName()+" "+ap.isListProperty()+" ");
+            // Before adding the task, adjust index to one past max index on PropertyObjectList
+            AbstractProperty indexProp = jmpTask.getPropertyByName("index");
+            PropertyHelper.setValueInt(getNexTaskIndex(PropertyObjectList.updAs(ap)), indexProp);
             PropertyObjectList.updAs(ap).adoptAndAppendValue(jmpTask);
             PropertyObjectList poList = jointPersonalizationToolModel.getJointTaskListAsObjectList();
             jointPersonalizationTaskListModel = new JMPTaskListModel(poList);
@@ -378,7 +382,16 @@ public class JointPersonalizationJPanel extends BaseToolPanel  implements Observ
         dObject.updPropertyByName("max_function_evaluations").setValueIsDefault(false);
 
     }
-
+    // return either 1 past max of index property or 1 if list is empty
+    private int getNexTaskIndex(PropertyObjectList currentTasks) {
+        int retValue = 1;
+        for(int ti=0; ti < currentTasks.size(); ti++){
+            OpenSimObject nextTask = currentTasks.getValue(ti);
+            int nextTaskIndex = PropertyHelper.getValueInt(nextTask.getPropertyByName("index"));
+            retValue = Math.max(nextTaskIndex+1, retValue);
+        }
+        return retValue;
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton addJointTaskButton;
