@@ -354,7 +354,16 @@ public class JointPersonalizationJPanel extends BaseToolPanel  implements Observ
             PropertyObjectList poJointList = PropertyObjectList.updAs(apJnts);
              for (int j=0; j<poJointList.size(); j++){
                 poJointList.getValue(j).updPropertyByName("parent_frame_transformation").setValueIsDefault(false);
+                AbstractProperty ParentFrameTransformation = poJointList.getValue(j).getPropertyByName("parent_frame_transformation");
+                OpenSimObject ParentFrameTransformationObject = PropertyObjectList.getAs(ParentFrameTransformation).getValue(0);
+                ParentFrameTransformationObject.updPropertyByName("translation_bounds").setValueIsDefault(false);
+                ParentFrameTransformationObject.updPropertyByName("orientation_bounds").setValueIsDefault(false);
+
                 poJointList.getValue(j).updPropertyByName("child_frame_transformation").setValueIsDefault(false);
+                AbstractProperty ChildFrameTransformation = poJointList.getValue(j).getPropertyByName("child_frame_transformation");
+                OpenSimObject ChildFrameTransformationObject = PropertyObjectList.getAs(ParentFrameTransformation).getValue(0);
+                ChildFrameTransformationObject.updPropertyByName("translation_bounds").setValueIsDefault(false);
+                ChildFrameTransformationObject.updPropertyByName("orientation_bounds").setValueIsDefault(false);
              }
         }
         dObject.updPropertyByName("input_directory").setValueIsDefault(false);
