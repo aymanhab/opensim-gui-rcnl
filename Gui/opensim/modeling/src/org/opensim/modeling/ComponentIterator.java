@@ -341,13 +341,36 @@ public class ComponentIterator {
   }
 
   /**
-   * Get the names of "continuous" state variables maintained by the Component<br>
-   * and its subcomponents.<br>
+   * Get the names of continuous state variables maintained by the<br>
+   * Component and its subcomponents. Each variable's name is prepended<br>
+   * by its path in the component hierarchy.<br>
    * @throws ComponentHasNoSystem if this Component has not been added to a<br>
    *         System (i.e., if initSystem has not been called)
    */
   public ArrayStr getStateVariableNames() {
     return new ArrayStr(opensimCommonJNI.ComponentIterator_getStateVariableNames(swigCPtr, this), true);
+  }
+
+  /**
+   * Get the names of discrete state variables maintained by the Component<br>
+   * and its subcomponents. Each variable's name is prepended by its path in<br>
+   * the component hierarchy.<br>
+   * @throws ComponentHasNoSystem if this Component has not been added to a<br>
+   *         System (i.e., if initSystem has not been called)
+   */
+  public ArrayStr getDiscreteVariableNames() {
+    return new ArrayStr(opensimCommonJNI.ComponentIterator_getDiscreteVariableNames(swigCPtr, this), true);
+  }
+
+  /**
+   * Get the names of the modeling options maintained by the Component<br>
+   * and its subcomponents. Each options's name is prepended by its path in<br>
+   * the component hierarchy.<br>
+   * @throws ComponentHasNoSystem if this Component has not been added to a<br>
+   *         System (i.e., if initSystem has not been called)
+   */
+  public ArrayStr getModelingOptionNames() {
+    return new ArrayStr(opensimCommonJNI.ComponentIterator_getModelingOptionNames(swigCPtr, this), true);
   }
 
   /**
@@ -396,7 +419,57 @@ public class ComponentIterator {
   }
    */
   public OpenSimObject getConnectee(String name) {
-    return new OpenSimObject(opensimCommonJNI.ComponentIterator_getConnectee(swigCPtr, this, name), false);
+    return new OpenSimObject(opensimCommonJNI.ComponentIterator_getConnectee__SWIG_2(swigCPtr, this, name), false);
+  }
+
+  /**
+   *  Get the connectee at the provided index as an Object. This means you<br>
+   * will not have access to the methods on the concrete connectee. This is the<br>
+   * method you must use in scripts to access the connectee.<br>
+   * <br>
+   * Example:<br>
+   * {@code 
+  const Object& obj = controller.getConnectee("actuators", 1);
+  obj.getName(); // method on Object works.
+  obj.getDefaultControls(); // error: not available.
+  }<br>
+   * <br>
+   * In MATLAB, if you want the concrete type, you need to downcast the<br>
+   * Object. Here is an example where you know the "actuators" are Actuators:<br>
+   * {@code 
+  actu = controller.getConnectee('actuators', 1);
+  controls = Actuator.safeDownCast(f).getDefaultControls();
+  }<br>
+   * <br>
+   * Exception: in Python, you will get the concrete type (in most cases):<br>
+   * {@code 
+  actu = controller.getConnectee("actuators", 1);
+  controls = actu.getDefaultControls() # works (if 'actu' is an Actuator)
+  }
+   */
+  public OpenSimObject getConnectee(String name, int index) {
+    return new OpenSimObject(opensimCommonJNI.ComponentIterator_getConnectee__SWIG_3(swigCPtr, this, name, index), false);
+  }
+
+  /**
+   * Returns a pointer to the AbstractSocket with a given socket name, or `nullptr`<br>
+   * if the socket with the given name does not exist on the component.<br>
+   * <br>
+   * See `getSocket()` for more details about how the socket is looked up.<br>
+   * <br>
+   * <b>C++ example</b><br>
+   * {@code 
+  if (const AbstractSocket* s = component.tryGetSocket("frame")) {
+      // do something with *s
+  }
+  else {
+      // handle the no-socket-by-that-name case
+  }
+  }
+   */
+  public AbstractSocket tryGetSocket(String name) {
+    long cPtr = opensimCommonJNI.ComponentIterator_tryGetSocket(swigCPtr, this, name);
+    return (cPtr == 0) ? null : new AbstractSocket(cPtr, false);
   }
 
   public AbstractSocket getSocket(String name) {
@@ -453,6 +526,20 @@ public class ComponentIterator {
   }
 
   /**
+   * If it exists on the component, returns a pointer to the named `Output`; otherwise,<br>
+   * returns a `nullptr`.<br>
+   * <br>
+   * Related: `getOutput`<br>
+   * <br>
+   * @param name  the name the `Output` to find<br>
+   * @return if it exists, a pointer to the `Output`; otherwise, `nullptr`
+   */
+  public AbstractOutput tryGetOutput(String name) {
+    long cPtr = opensimCommonJNI.ComponentIterator_tryGetOutput(swigCPtr, this, name);
+    return (cPtr == 0) ? null : new AbstractOutput(cPtr, false);
+  }
+
+  /**
    * Get the Output provided by this Component by name.<br>
    * <br>
    * <b>C++ example:</b> get an Output from a Component in a model<br>
@@ -468,30 +555,64 @@ public class ComponentIterator {
   }
 
   /**
-   * Get a ModelingOption flag for this Component by name.<br>
-   * The flag is an integer corresponding to the index of modelingOptionNames used<br>
-   * add the modeling option to the component. @see addModelingOption<br>
+   * Based on a specified path, get the value of a modeling option.<br>
    * <br>
-   * @param state  the State in which to set the modeling option<br>
-   * @param name   the name (string) of the modeling option of interest<br>
-   * @return flag  integer value for modeling option
+   * The specified path consists of the name of the modeling option<br>
+   * prepended by its absolute or relative path in the component hierarchy.<br>
+   * <br>
+   * If this component is the owner of the modeling option, the specified<br>
+   * path should simply be the name of the modeling option.<br>
+   * <br>
+   * @param state State in which to set the modeling option.<br>
+   * @param path Path of the modeling option in the component hierarchy.<br>
+   * @return flag Value of the modeling option.<br>
+   * @throws EmptyComponentPath if the specified path is an empty string<br>
+   * (i.e., path == "").<br>
+   * @throws VariableOwnerNotFoundOnSpecifiedPath if the candidate owner<br>
+   * of the modeling option cannot be found at the specified path.<br>
+   * @throws VariableNotFound if the specified modeling option cannot be<br>
+   * found in the candidate owner.<br>
+   * @see Component#resolveVariableNameAndOwner()
    */
-  public int getModelingOption(State state, String name) {
-    return opensimCommonJNI.ComponentIterator_getModelingOption(swigCPtr, this, State.getCPtr(state), state, name);
+  public int getModelingOption(State state, String path) {
+    return opensimCommonJNI.ComponentIterator_getModelingOption__SWIG_0(swigCPtr, this, State.getCPtr(state), state, path);
+  }
+
+  public int getModelingOption(State state, ComponentPath path) {
+    return opensimCommonJNI.ComponentIterator_getModelingOption__SWIG_1(swigCPtr, this, State.getCPtr(state), state, ComponentPath.getCPtr(path), path);
   }
 
   /**
-   * %Set the value of a ModelingOption flag for this Component.<br>
-   * if the integer value exceeds the number of option names used to<br>
-   * define the options, an exception is thrown. The SimTK::State<br>
-   * Stage will be reverted back to Stage::Instance.<br>
+   * Based on a specified path, set the value of a modeling option.<br>
    * <br>
-   * @param state  the State in which to set the flag<br>
-   * @param name   the name (string) of the modeling option of interest<br>
-   * @param flag   the desired flag (int) value specifying the modeling option
+   * The specified path consists of the name of the modeling option<br>
+   * prepended by its absolute or relative path in the component hierarchy.<br>
+   * <br>
+   * If this component is the owner of the modeling option, the specified<br>
+   * path should simply be the name of the modeling option.<br>
+   * <br>
+   * Note: Successfully setting the value of the modeling option will revert<br>
+   * the realization stage back to SimTK::Stage::Instance.<br>
+   * <br>
+   * @param state State in which to set the modeling option.<br>
+   * @param path Path of the modeling option in the component hierarchy.<br>
+   * @param flag Value to which to set the modeling option.<br>
+   * @throws ModelingOptionMaxExceeded if the flag is greater that the<br>
+   * maximum allowed for the specified modeling option.<br>
+   * @throws EmptyComponentPath if the specified path is an empty string<br>
+   * (i.e., path == "").<br>
+   * @throws VariableOwnerNotFoundOnSpecifiedPath if the candidate owner<br>
+   * of the modeling option cannot be found at the specified path.<br>
+   * @throws VariableNotFound if the specified modeling option cannot be<br>
+   * found in the candidate owner.<br>
+   * @see Component#resolveVariableNameAndOwner()
    */
-  public void setModelingOption(State state, String name, int flag) {
-    opensimCommonJNI.ComponentIterator_setModelingOption(swigCPtr, this, State.getCPtr(state), state, name, flag);
+  public void setModelingOption(State state, String path, int flag) {
+    opensimCommonJNI.ComponentIterator_setModelingOption__SWIG_0(swigCPtr, this, State.getCPtr(state), state, path, flag);
+  }
+
+  public void setModelingOption(State state, ComponentPath path, int flag) {
+    opensimCommonJNI.ComponentIterator_setModelingOption__SWIG_1(swigCPtr, this, State.getCPtr(state), state, ComponentPath.getCPtr(path), path, flag);
   }
 
   /**
@@ -525,7 +646,7 @@ public class ComponentIterator {
    }<br>
    * <br>
    * @param state   the State for which to get the value<br>
-   * <br>
+   * @param path    path to the state variable of interest<br>
    * @throws ComponentHasNoSystem if this Component has not been added to a<br>
    *         System (i.e., if initSystem has not been called)
    */
@@ -590,33 +711,222 @@ public class ComponentIterator {
    *         System (i.e., if initSystem has not been called)
    */
   public double getStateVariableDerivativeValue(State state, String name) {
-    return opensimCommonJNI.ComponentIterator_getStateVariableDerivativeValue(swigCPtr, this, State.getCPtr(state), state, name);
+    return opensimCommonJNI.ComponentIterator_getStateVariableDerivativeValue__SWIG_0(swigCPtr, this, State.getCPtr(state), state, name);
   }
 
   /**
-   * Get the value of a discrete variable allocated by this Component by name.<br>
+   * Get the value of a state variable derivative computed by this Component.<br>
    * <br>
-   * @param state   the State from which to get the value<br>
-   * @param name    the name of the state variable<br>
-   * @return value  the discrete variable value<br>
+   * @param state   the State for which to get the derivative value<br>
+   * @param path    path to the state variable of interest<br>
    * @throws ComponentHasNoSystem if this Component has not been added to a<br>
    *         System (i.e., if initSystem has not been called)
    */
-  public double getDiscreteVariableValue(State state, String name) {
-    return opensimCommonJNI.ComponentIterator_getDiscreteVariableValue(swigCPtr, this, State.getCPtr(state), state, name);
+  public double getStateVariableDerivativeValue(State state, ComponentPath path) {
+    return opensimCommonJNI.ComponentIterator_getStateVariableDerivativeValue__SWIG_1(swigCPtr, this, State.getCPtr(state), state, ComponentPath.getCPtr(path), path);
   }
 
   /**
-   * %Set the value of a discrete variable allocated by this Component by name.<br>
+   * Based on a specified path, resolve the name of a state variable,<br>
+   * discrete variable, or modeling option and resolve the component that<br>
+   * owns it (i.e., its parent).<br>
    * <br>
-   * @param state  the State for which to set the value<br>
-   * @param name   the name of the discrete variable<br>
-   * @param value  the value to set<br>
-   * @throws ComponentHasNoSystem if this Component has not been added to a<br>
-   *         System (i.e., if initSystem has not been called)
+   * The path consists of the name of the state variable, discrete variable,<br>
+   * or modeling option prepended by its absolute or relative path in the<br>
+   * component hierarchy.<br>
+   * <br>
+   * This method does not verify that the variable or option can actually be<br>
+   * found at the spcified path. It simply parses the path, returning the<br>
+   * variable name and candidate owner.<br>
+   * <br>
+   * Note: Calling Component::traversPathToComponent&lt;Component&gt;() will not<br>
+   * work for state variables, discrete variables, and modeling options<br>
+   * because these obects are not themselves Components. However, a pointer<br>
+   * to a StateVariable can be obtained in a single step by calling<br>
+   * Component::traverseToStateVariable(). A similar dedicated method is not<br>
+   * available for discrete variables or for modeling options.<br>
+   * <br>
+   * #### Example Paths<br>
+   * <br>
+   * A relative path in which this component is the owner:<br>
+   *   ```variable_name```<br>
+   * <br>
+   * An absolute path from the root of the component hierarchy:<br>
+   *   ```/grandparent_name/parent_name/variable_name```<br>
+   * <br>
+   * A relative path in which a sibling of this component is the owner:<br>
+   *   ```../sibling_name/variable_name```<br>
+   * <br>
+   * @param path Path of the state variable, discrete variable, or modeling<br>
+   * option in the component heirarchy.<br>
+   * @param varName The name of the state variable, discrete variable,<br>
+   * or modeling option is returned in this parameter.<br>
+   * @return Pointer to the component that, according to the path, owns the<br>
+   * state variable, discrete variable, or modeling option. If the specified<br>
+   * path consists only of the name of the state variable, discrete variable,<br>
+   * or modeling option, a pointer to this component is returned.<br>
+   * @throws EmptyComponentPath if the specified path is an empty string<br>
+   * (i.e., path == "").<br>
+   * @throws VariableOwnerNotFoundOnSpecifiedPath if the candidate owner<br>
+   * cannot be found at the specified path.
    */
-  public void setDiscreteVariableValue(State state, String name, double value) {
-    opensimCommonJNI.ComponentIterator_setDiscreteVariableValue(swigCPtr, this, State.getCPtr(state), state, name, value);
+  public Component resolveVariableNameAndOwner(ComponentPath path, SWIGTYPE_p_std__string varName) {
+    long cPtr = opensimCommonJNI.ComponentIterator_resolveVariableNameAndOwner(swigCPtr, this, ComponentPath.getCPtr(path), path, SWIGTYPE_p_std__string.getCPtr(varName));
+    return (cPtr == 0) ? null : new Component(cPtr, false);
+  }
+
+  /**
+   * Based on a specified path, get the value of a discrete variable.<br>
+   * <br>
+   * The specified path consists of the name of the discrete variable<br>
+   * prepended by its absolute or relative path in the component hierarchy.<br>
+   * <br>
+   * If this component is the owner of the discrete variable, the specified<br>
+   * path should simply be the name of the discrete variable.<br>
+   * <br>
+   * @param state State from which to get the value.<br>
+   * @param path Path of the discrete variable in the component hierarchy.<br>
+   * @return Value of the discrete variable.<br>
+   * @throws ComponentHasNoSystem if this Component has not been added to a<br>
+   * System (i.e., if initSystem has not been called).<br>
+   * @throws EmptyComponentPath if the specified path is an empty string<br>
+   * (i.e., path == "").<br>
+   * @throws VariableOwnerNotFoundOnSpecifiedPath if the candidate owner<br>
+   * of the variable cannot be found at the specified path.<br>
+   * @throws VariableNotFound if the specified variable cannot be found in<br>
+   * the candidate owner.<br>
+   * @see Component#resolveVariableNameAndOwner()
+   */
+  public double getDiscreteVariableValue(State state, String path) {
+    return opensimCommonJNI.ComponentIterator_getDiscreteVariableValue(swigCPtr, this, State.getCPtr(state), state, path);
+  }
+
+  /**
+   * Based on a specified path, retrieve a read-only reference to the<br>
+   * abstract value of the discrete variable at a specified path. This method<br>
+   * provides a more general interface that is not limited to values of type<br>
+   * double.<br>
+   * <br>
+   * The specified path consists of the name of the discrete variable<br>
+   * prepended by its absolute or relative path in the component hierarchy.<br>
+   * <br>
+   * If this component is the owner of the discrete variable, the specified<br>
+   * path should simply be the name of the discrete variable.<br>
+   * <br>
+   * To obtain the type-specific value of a discrete variable from an<br>
+   * AbstractValue, perform a cast using the templated methods provided in<br>
+   * class SimTK::Value&lt;T&gt;. When the type is unknown, it can be queried using<br>
+   * the SimTK::Value&lt;T&gt;::isA() method. For example,<br>
+   * <br>
+   * ```<br>
+   *      const SimTK::AbstractValue&amp; valAbstract =<br>
+   *          getDiscreteVariableAbstractValue(state, pathName);<br>
+   * <br>
+   *      if (SimTK::Value&lt;double&gt;::isA(valAbstract)) {<br>
+   *          const SimTK::Value&lt;double&gt;&amp; valDbl =<br>
+   *              SimTK::Value&lt;double&gt;::downcast(valAbstract);<br>
+   *          double x = valDbl + 0.4;<br>
+   * <br>
+   *      } else if (SimTK::Value&lt;Vec3&gt;::isA(valAbstract)) {<br>
+   *          const SimTK::Value&lt;Vec3&gt;&amp; valVec3 =<br>
+   *              SimTK::Value&lt;Vec3&gt;::downcast(valAbstract);<br>
+   *          Vec3 x = valVec3 + Vec3(0.4);<br>
+   *      }<br>
+   * ```<br>
+   * For convenience, a templated method that implements basic downcasting<br>
+   * internally is available. See getDiscreteVariableValue&lt;T&gt;().<br>
+   * <br>
+   * @param state State from which to get the value.<br>
+   * @param path Specified path of the variable in the component heirarchy.<br>
+   * @return Read-only reference to the discrete variable's AbstractValue.<br>
+   * @throws ComponentHasNoSystem if this Component has not been added to a<br>
+   *         System (i.e., if initSystem has not been called).<br>
+   * @throws EmptyComponentPath if the specified path is an empty string<br>
+   * (i.e., path == "").<br>
+   * @throws VariableOwnerNotFoundOnSpecifiedPath if the candidate owner<br>
+   * of the variable cannot be found at the specified path.<br>
+   * @throws VariableNotFound if the specified variable cannot be found in<br>
+   * the candidate owner.<br>
+   * @see Component#resolveVariableNameAndOwner
+   */
+  public SWIGTYPE_p_SimTK__AbstractValue getDiscreteVariableAbstractValue(State state, String path) {
+    return new SWIGTYPE_p_SimTK__AbstractValue(opensimCommonJNI.ComponentIterator_getDiscreteVariableAbstractValue(swigCPtr, this, State.getCPtr(state), state, path), false);
+  }
+
+  /**
+   * Based on a specified path, set the value of a discrete variable.<br>
+   * <br>
+   * The specified path consists of the name of the discrete variable<br>
+   * prepended by its absolute or relative path in the component hierarchy.<br>
+   * <br>
+   * If this component is the owner of the discrete variable, the specified<br>
+   * path should simply be the name of the discrete variable.<br>
+   * <br>
+   * @param state State in which to set the discrete variable.<br>
+   * @param path Path of the discrete variable in the component hierarchy.<br>
+   * @param value Value to which to set the discrete variable.<br>
+   * @throws ComponentHasNoSystem if this Component has not been added to a<br>
+   *         System (i.e., if initSystem has not been called).<br>
+   * @throws EmptyComponentPath if the specified path is an empty string<br>
+   * (i.e., path == "").<br>
+   * @throws VariableOwnerNotFoundOnSpecifiedPath if the candidate owner<br>
+   * of the variable cannot be found at the specified path.<br>
+   * @throws VariableNotFound if the specified variable cannot be found in<br>
+   * the candidate owner.<br>
+   * @see Component#resolveVariableNameAndOwner()
+   */
+  public void setDiscreteVariableValue(State state, String path, double value) {
+    opensimCommonJNI.ComponentIterator_setDiscreteVariableValue(swigCPtr, this, State.getCPtr(state), state, path, value);
+  }
+
+  /**
+   * Based on a specified path, retrieve a writable reference to the abstract<br>
+   * value of the discrete variable. This method provides a more general<br>
+   * interface that is not limited to values of type double.<br>
+   * <br>
+   * The specified path consists of the name of the discrete variable<br>
+   * prepended by its absolute or relative path in the component hierarchy.<br>
+   * <br>
+   * If this component is the owner of the discrete variable, the specified<br>
+   * path should simply be the name of the discrete variable.<br>
+   * <br>
+   * To obtain the type-specific value of a discrete variable, perform<br>
+   * a cast using the template methods provided in class SimTK::Value&lt;T&gt;.<br>
+   * When the type is unknown, it can be queried using the<br>
+   * SimTK::Value&lt;T&gt;::isA() method. For example,<br>
+   * <br>
+   * ```<br>
+   *      SimTK::AbstractValue&amp; valAbstract =<br>
+   *          updDiscreteVariableAbstractValue(state, pathName);<br>
+   * <br>
+   *      if (SimTK::Value&lt;double&gt;::isA(valAbstract)) {<br>
+   *          SimTK::Value&lt;double&gt;&amp; valDbl =<br>
+   *              SimTK::Value&lt;double&gt;::updDowncast(valAbstract);<br>
+   *          valDbl = 0.4;<br>
+   * <br>
+   *      } else if (SimTK::Value&lt;Vec3&gt;::isA(valAbstract)) {<br>
+   *          SimTK::Value&lt;Vec3&gt;&amp; valVec3 =<br>
+   *              SimTK::Value&lt;Vec3&gt;::updDowncast(valAbstract);<br>
+   *          valVec3 = Vec3(0.4);<br>
+   *      }<br>
+   * ```<br>
+   * For convenience, a templated method that implements basic downcasting<br>
+   * internally is available. See setDiscreteVariableValue&lt;T&gt;().<br>
+   * <br>
+   * @param state State from which to get the value.<br>
+   * @param path Path of the discrete variable in the component hierarchy.<br>
+   * @return Writable reference to the discrete variable's AbstractValue.<br>
+   * @throws ComponentHasNoSystem if this Component has not been added to a<br>
+   *         System (i.e., if initSystem has not been called).<br>
+   * @throws EmptyComponentPath if the specified path is an empty string<br>
+   * (i.e., path == "").<br>
+   * @throws VariableOwnerNotFoundOnSpecifiedPath if the candidate owner<br>
+   * of the variable cannot be found at the specified path.<br>
+   * @throws VariableNotFound if the specified variable cannot be found in<br>
+   * this Component.
+   */
+  public SWIGTYPE_p_SimTK__AbstractValue updDiscreteVariableAbstractValue(State state, String path) {
+    return new SWIGTYPE_p_SimTK__AbstractValue(opensimCommonJNI.ComponentIterator_updDiscreteVariableAbstractValue(swigCPtr, this, State.getCPtr(state), state, path), false);
   }
 
   /**

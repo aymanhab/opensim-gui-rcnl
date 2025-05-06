@@ -71,8 +71,7 @@ order of the value and speed arguments must match the order in the
 the tension in the path by the moment arms. Therefore, this class only
 applies mobility (i.e., generalized) forces to the model.
 
-References
-----------
+# References
 - [1] Meyer AJ, Patten C, Fregly BJ (2017) "Lower extremity EMG-driven
       modeling of walking with automated adjustment of musculoskeletal
       geometry." PLoS ONE 12(7): e0179698.
@@ -366,8 +365,8 @@ public class FunctionBasedPath extends AbstractGeometryPath {
     return opensimSimulationJNI.FunctionBasedPath_computeMomentArm(swigCPtr, this, State.getCPtr(s), s, Coordinate.getCPtr(coord), coord);
   }
 
-  public void addInEquivalentForces(State state, double tension, VectorOfSpatialVec bodyForces, Vector mobilityForces) {
-    opensimSimulationJNI.FunctionBasedPath_addInEquivalentForces(swigCPtr, this, State.getCPtr(state), state, tension, VectorOfSpatialVec.getCPtr(bodyForces), bodyForces, Vector.getCPtr(mobilityForces), mobilityForces);
+  public void produceForces(State arg0, double tension, SWIGTYPE_p_OpenSim__ForceConsumer arg2) {
+    opensimSimulationJNI.FunctionBasedPath_produceForces(swigCPtr, this, State.getCPtr(arg0), arg0, tension, SWIGTYPE_p_OpenSim__ForceConsumer.getCPtr(arg2));
   }
 
   public boolean isVisualPath() {

@@ -8,18 +8,22 @@
 
 package org.opensim.modeling;
 
-public class SWIGTYPE_p_SimTK__RowVector_T_SimTK__Rotation_T_SimTK__Real_t_t {
+public class SWIGTYPE_p_OpenSim__ControlDistributor {
   private transient long swigCPtr;
 
-  protected SWIGTYPE_p_SimTK__RowVector_T_SimTK__Rotation_T_SimTK__Real_t_t(long cPtr, @SuppressWarnings("unused") boolean futureUse) {
+  protected SWIGTYPE_p_OpenSim__ControlDistributor(long cPtr, @SuppressWarnings("unused") boolean futureUse) {
     swigCPtr = cPtr;
   }
 
-  protected SWIGTYPE_p_SimTK__RowVector_T_SimTK__Rotation_T_SimTK__Real_t_t() {
+  protected SWIGTYPE_p_OpenSim__ControlDistributor() {
     swigCPtr = 0;
   }
 
-  protected static long getCPtr(SWIGTYPE_p_SimTK__RowVector_T_SimTK__Rotation_T_SimTK__Real_t_t obj) {
+  protected static long getCPtr(SWIGTYPE_p_OpenSim__ControlDistributor obj) {
+    return (obj == null) ? 0 : obj.swigCPtr;
+  }
+
+  protected static long swigRelease(SWIGTYPE_p_OpenSim__ControlDistributor obj) {
     return (obj == null) ? 0 : obj.swigCPtr;
   }
 }

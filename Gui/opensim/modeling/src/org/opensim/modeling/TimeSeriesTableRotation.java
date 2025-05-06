@@ -252,10 +252,11 @@ public class TimeSeriesTableRotation extends DataTableRotation {
   }
 
   /**
-   * Trim TimeSeriesTable to rows that have times that lies between <br>
-   * newStartTime, newFinalTime. The trimming is done in place, no copy is made. <br>
+   * Trim TimeSeriesTable to rows that have times that lies between newStartTime<br>
+   * and newFinalTime (inclusive). The trimming is done in place, no copy is made.<br>
    * Uses getRowIndexAfterTime to locate first row and<br>
-   * getNearestRowIndexForTime method to locate last row.
+   *      getRowIndexBeforeTime to locate last row.<br>
+   * @throws EmptyTable if the trim would make the table empty.
    */
   public void trim(double newStartTime, double newFinalTime) {
     opensimCommonJNI.TimeSeriesTableRotation_trim(swigCPtr, this, newStartTime, newFinalTime);
@@ -275,9 +276,26 @@ public class TimeSeriesTableRotation extends DataTableRotation {
     opensimCommonJNI.TimeSeriesTableRotation_trimTo(swigCPtr, this, newFinalTime);
   }
 
+  /**
+   * Trim table to rows between start_index and last_index (inclusive).<br>
+   * @throws InvalidIndices if the last index is out of range.<br>
+   * @throws EmptyTable if the trim would make the table empty.
+   */
+  public void trimToIndices(long start_index, long last_index) {
+    opensimCommonJNI.TimeSeriesTableRotation_trimToIndices(swigCPtr, this, start_index, last_index);
+  }
+
   public TimeSeriesTableRotation clone() {
     long cPtr = opensimCommonJNI.TimeSeriesTableRotation_clone(swigCPtr, this);
     return (cPtr == 0) ? null : new TimeSeriesTableRotation(cPtr, true);
+  }
+
+  public TimeSeriesTable flatten() {
+    return new TimeSeriesTable(opensimCommonJNI.TimeSeriesTableRotation_flatten__SWIG_0(swigCPtr, this), true);
+  }
+
+  public TimeSeriesTable flatten(StdVectorString suffixes) {
+    return new TimeSeriesTable(opensimCommonJNI.TimeSeriesTableRotation_flatten__SWIG_1(swigCPtr, this, StdVectorString.getCPtr(suffixes), suffixes), true);
   }
 
 }

@@ -74,15 +74,19 @@ time  r_shoulder      l_shoulder      r_leg           l_leg
  */
 public class STOFileAdapter {
   private transient long swigCPtr;
-  protected transient boolean swigCMemOwn;
+  private transient boolean swigCMemOwn;
 
-  public STOFileAdapter(long cPtr, boolean cMemoryOwn) {
+  protected STOFileAdapter(long cPtr, boolean cMemoryOwn) {
     swigCMemOwn = cMemoryOwn;
     swigCPtr = cPtr;
   }
 
-  public static long getCPtr(STOFileAdapter obj) {
+  protected static long getCPtr(STOFileAdapter obj) {
     return (obj == null) ? 0 : obj.swigCPtr;
+  }
+
+  protected void swigSetCMemOwn(boolean own) {
+    swigCMemOwn = own;
   }
 
   @SuppressWarnings("deprecation")
