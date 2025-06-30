@@ -19,11 +19,14 @@ import org.openide.DialogDisplayer;
 import org.openide.util.Exceptions;
 import org.opensim.modeling.AbstractProperty;
 import org.opensim.modeling.MarkerData;
+import org.opensim.modeling.Model;
 import org.opensim.modeling.OpenSimObject;
 import org.opensim.modeling.PropertyDoubleList;
 import org.opensim.modeling.PropertyHelper;
 import org.opensim.modeling.PropertyObjectList;
+import org.opensim.modeling.PropertyStringList;
 import org.opensim.utils.ErrorDialog;
+import org.opensim.view.pub.OpenSimDB;
 
 /**
  *
@@ -39,6 +42,7 @@ public class EditJMPTaskJPanel extends javax.swing.JPanel {
     private JMPBodyListModel jmpBodyListModel = null;
     private PropertyObjectList poJointList;
     private PropertyObjectList poBodyList;
+    private PropertyStringList propMarkerList;
     private ListSelectionModel listSelectionModel, list2SelectionModel;
     private boolean initializing=false;
     /**
@@ -56,6 +60,7 @@ public class EditJMPTaskJPanel extends javax.swing.JPanel {
         jmpJointListModel= new JMPJointListModel(poJointList);
         poBodyList = PropertyObjectList.updAs(jointPersonalizationTask.getPropertyByName("JMPBodySet"));
         jmpBodyListModel = new JMPBodyListModel(poBodyList);
+        propMarkerList = PropertyStringList.updAs(jointPersonalizationTask.getPropertyByName("marker_names"));
         initComponents();
         jList1.setModel(jmpJointListModel);
         jList2.setModel(jmpBodyListModel);
@@ -74,6 +79,7 @@ public class EditJMPTaskJPanel extends javax.swing.JPanel {
         PropertyDoubleList pDoubleList = PropertyDoubleList.updAs(timeRangeProp);
         jTextStartTime.setText(String.valueOf(pDoubleList.getValue(0)));
         jTextEndTime.setText(String.valueOf(pDoubleList.getValue(1)));
+        jMarkersTextArea.setText(propMarkerList.toString());
         initializing = false;
         
     }
@@ -94,6 +100,11 @@ public class EditJMPTaskJPanel extends javax.swing.JPanel {
         jLabel4 = new javax.swing.JLabel();
         jTextStartTime = new javax.swing.JTextField();
         jTextEndTime = new javax.swing.JTextField();
+        jMarkersPanel = new javax.swing.JPanel();
+        jLabel2 = new javax.swing.JLabel();
+        jMarkersScrollPane = new javax.swing.JScrollPane();
+        jMarkersTextArea = new javax.swing.JTextArea();
+        jEditMarkersButton = new javax.swing.JButton();
         jJointsPanel = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         jList1 = new javax.swing.JList<>();
@@ -165,6 +176,43 @@ public class EditJMPTaskJPanel extends javax.swing.JPanel {
             }
         });
 
+        org.openide.awt.Mnemonics.setLocalizedText(jLabel2, org.openide.util.NbBundle.getMessage(EditJMPTaskJPanel.class, "EditJMPTaskJPanel.jLabel2.text")); // NOI18N
+
+        jMarkersTextArea.setColumns(20);
+        jMarkersTextArea.setRows(5);
+        jMarkersScrollPane.setViewportView(jMarkersTextArea);
+
+        org.openide.awt.Mnemonics.setLocalizedText(jEditMarkersButton, org.openide.util.NbBundle.getMessage(EditJMPTaskJPanel.class, "EditJMPTaskJPanel.jEditMarkersButton.text")); // NOI18N
+        jEditMarkersButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jEditMarkersButtonActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jMarkersPanelLayout = new javax.swing.GroupLayout(jMarkersPanel);
+        jMarkersPanel.setLayout(jMarkersPanelLayout);
+        jMarkersPanelLayout.setHorizontalGroup(
+            jMarkersPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jMarkersPanelLayout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jLabel2)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jMarkersScrollPane, javax.swing.GroupLayout.PREFERRED_SIZE, 557, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jEditMarkersButton)
+                .addGap(10, 10, 10))
+        );
+        jMarkersPanelLayout.setVerticalGroup(
+            jMarkersPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jMarkersPanelLayout.createSequentialGroup()
+                .addGap(12, 12, 12)
+                .addGroup(jMarkersPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
+                    .addComponent(jLabel2)
+                    .addComponent(jMarkersScrollPane, javax.swing.GroupLayout.PREFERRED_SIZE, 83, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jEditMarkersButton))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
         jJointsPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(org.openide.util.NbBundle.getMessage(EditJMPTaskJPanel.class, "EditJMPTaskJPanel.jJointsPanel.border.title"))); // NOI18N
 
         jList1.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
@@ -198,7 +246,7 @@ public class EditJMPTaskJPanel extends javax.swing.JPanel {
         jJointsPanelLayout.setHorizontalGroup(
             jJointsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jJointsPanelLayout.createSequentialGroup()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 497, Short.MAX_VALUE)
+                .addComponent(jScrollPane1)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jJointsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(deleteJointButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -207,13 +255,16 @@ public class EditJMPTaskJPanel extends javax.swing.JPanel {
         );
         jJointsPanelLayout.setVerticalGroup(
             jJointsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jJointsPanelLayout.createSequentialGroup()
-                .addComponent(addJointButton)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(editJointButton)
-                .addGap(14, 14, 14)
-                .addComponent(deleteJointButton))
-            .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addGroup(jJointsPanelLayout.createSequentialGroup()
+                .addGroup(jJointsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                    .addComponent(jScrollPane1)
+                    .addGroup(jJointsPanelLayout.createSequentialGroup()
+                        .addComponent(addJointButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(editJointButton)
+                        .addGap(14, 14, 14)
+                        .addComponent(deleteJointButton)))
+                .addContainerGap(32, Short.MAX_VALUE))
         );
 
         org.openide.awt.Mnemonics.setLocalizedText(jLabel11, org.openide.util.NbBundle.getMessage(EditJMPTaskJPanel.class, "EditJMPTaskJPanel.jLabel11.text")); // NOI18N
@@ -257,7 +308,7 @@ public class EditJMPTaskJPanel extends javax.swing.JPanel {
         jBodiesPanelLayout.setHorizontalGroup(
             jBodiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jBodiesPanelLayout.createSequentialGroup()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 497, Short.MAX_VALUE)
+                .addComponent(jScrollPane2)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jBodiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(deleteBodyButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -267,23 +318,24 @@ public class EditJMPTaskJPanel extends javax.swing.JPanel {
         jBodiesPanelLayout.setVerticalGroup(
             jBodiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jBodiesPanelLayout.createSequentialGroup()
+                .addGap(0, 0, Short.MAX_VALUE)
                 .addComponent(addBodyButton)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(editBodyButton)
                 .addGap(14, 14, 14)
                 .addComponent(deleteBodyButton))
-            .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.TRAILING)
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
+            .addComponent(jBodiesPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jEnabledCheckBox)
-                    .addComponent(jJointsPanel, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jLabel1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -299,9 +351,11 @@ public class EditJMPTaskJPanel extends javax.swing.JPanel {
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jLabel11)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(triallFilePath, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addComponent(jBodiesPanel, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addComponent(triallFilePath, javax.swing.GroupLayout.DEFAULT_SIZE, 599, Short.MAX_VALUE)))
                 .addContainerGap())
+            .addComponent(jJointsPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addComponent(jMarkersPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -322,11 +376,16 @@ public class EditJMPTaskJPanel extends javax.swing.JPanel {
                     .addComponent(jTextStartTime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel4)
                     .addComponent(jTextEndTime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(18, 18, 18)
-                .addComponent(jJointsPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jBodiesPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGap(114, 114, 114)
+                .addComponent(jJointsPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jBodiesPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
+            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                    .addContainerGap(249, Short.MAX_VALUE)
+                    .addComponent(jMarkersPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addContainerGap(582, Short.MAX_VALUE)))
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -524,6 +583,22 @@ public class EditJMPTaskJPanel extends javax.swing.JPanel {
         jList2.setModel(jmpBodyListModel);
     }//GEN-LAST:event_deleteBodyButtonActionPerformed
 
+    private void jEditMarkersButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jEditMarkersButtonActionPerformed
+        // TODO add your handling code here:
+        Model model = OpenSimDB.getInstance().getCurrentModel();
+        MarkerTableModel mtm = new MarkerTableModel(propMarkerList, model);
+        SelectQuantitiesFromListJPanel selectionPanel = new SelectQuantitiesFromListJPanel(mtm);
+        DialogDescriptor dlg = new DialogDescriptor(selectionPanel,"Select Markers");
+        dlg.setModal(true);
+        DialogDisplayer.getDefault().createDialog(dlg).setVisible(true);
+        Object userInput = dlg.getValue();
+        if (((Integer)userInput).compareTo((Integer)DialogDescriptor.OK_OPTION)==0){
+            mtm.populateMarkerListProperty();
+            jMarkersTextArea.setText(propMarkerList.toString());
+        }
+
+    }//GEN-LAST:event_jEditMarkersButtonActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton addBodyButton;
@@ -533,14 +608,19 @@ public class EditJMPTaskJPanel extends javax.swing.JPanel {
     private javax.swing.JButton editBodyButton;
     private javax.swing.JButton editJointButton;
     private javax.swing.JPanel jBodiesPanel;
+    private javax.swing.JButton jEditMarkersButton;
     private javax.swing.JCheckBox jEnabledCheckBox;
     private javax.swing.JPanel jJointsPanel;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel11;
+    private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JList<String> jList1;
     private javax.swing.JList<String> jList2;
+    private javax.swing.JPanel jMarkersPanel;
+    private javax.swing.JScrollPane jMarkersScrollPane;
+    private javax.swing.JTextArea jMarkersTextArea;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JTextField jTaskNameTextField;
