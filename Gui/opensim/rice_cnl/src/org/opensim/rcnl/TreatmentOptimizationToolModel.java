@@ -37,6 +37,7 @@ public class TreatmentOptimizationToolModel {
     private OpenSimObject propRCNLTorqueControllerObject;
     private PropertyStringList propRCNLTorqueCoordinateListString;
     private PropertyStringList propInputModelFileString;
+    private PropertyStringList propertyTrialNameString;
 
     public TreatmentOptimizationToolModel(Model model, Mode mode) {
         // TODO in case plugin is not preloaded, guard against null return or exception thown
@@ -106,6 +107,7 @@ public class TreatmentOptimizationToolModel {
         AbstractProperty propInitialGuessDir = toolAsObject.updPropertyByName("initial_guess_directory");
         propInitialGuessDirString = PropertyStringList.getAs(propInitialGuessDir);
         AbstractProperty propTrackedQuantitiesDir = toolAsObject.updPropertyByName("tracked_quantities_directory");
+        propertyTrialNameString = PropertyStringList.getAs(toolAsObject.updPropertyByName("trial_name"));
         propTrackedQuantitiesDirString = PropertyStringList.getAs(propTrackedQuantitiesDir);
         AbstractProperty propResultsDir = toolAsObject.updPropertyByName("results_directory");
         propResultsDirString = PropertyStringList.getAs(propResultsDir);
@@ -234,6 +236,14 @@ public class TreatmentOptimizationToolModel {
         PropertyObjectList olist = PropertyObjectList.getAs(ap);
         return olist;
     }
-    
+    public String getTrialPrefix() {
+        if (propertyTrialNameString.size()==1)
+            return propertyTrialNameString.getValue(0);
+        return "";
+    }
+    public void setTrialPrefix(String newPrefix){
+        propertyTrialNameString.setValue(newPrefix);
+    }
+
 
 }

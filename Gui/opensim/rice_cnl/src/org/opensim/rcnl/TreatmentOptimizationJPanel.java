@@ -76,6 +76,7 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
        trackedQuantitiesDirPath.setCheckIfFileExists(true);
        trackedQuantitiesDirPath.setDirectoriesOnly(true);
        trackedQuantitiesDirPath.setFileName(treatmentOptimizationToolModel.getTrackedQuantitiesDir());
+       jTrialPrefixTextField.setText(treatmentOptimizationToolModel.getTrialPrefix());
        outputDirPath.setDialogTitle("Select output directory");
        outputDirPath.setCheckIfFileExists(false);
        outputDirPath.setDirectoriesOnly(true);
@@ -136,6 +137,8 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
         jLabel4 = new javax.swing.JLabel();
         trackedQuantitiesDirPath = new org.opensim.swingui.FileTextFieldAndChooser();
         jLabel6 = new javax.swing.JLabel();
+        jLabel1 = new javax.swing.JLabel();
+        jTrialPrefixTextField = new javax.swing.JTextField();
         jCoordinatesListPanel2 = new javax.swing.JPanel();
         jScrollPane2 = new javax.swing.JScrollPane();
         jCoordinateListTextArea1 = new javax.swing.JTextArea();
@@ -330,6 +333,20 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
 
         org.openide.awt.Mnemonics.setLocalizedText(jLabel6, org.openide.util.NbBundle.getMessage(TreatmentOptimizationJPanel.class, "TreatmentOptimizationJPanel.jLabel6.text")); // NOI18N
 
+        org.openide.awt.Mnemonics.setLocalizedText(jLabel1, org.openide.util.NbBundle.getMessage(TreatmentOptimizationJPanel.class, "TreatmentOptimizationJPanel.jLabel1.text")); // NOI18N
+
+        jTrialPrefixTextField.setText(org.openide.util.NbBundle.getMessage(TreatmentOptimizationJPanel.class, "TreatmentOptimizationJPanel.jTrialPrefixTextField.text")); // NOI18N
+        jTrialPrefixTextField.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusLost(java.awt.event.FocusEvent evt) {
+                jTrialPrefixTextFieldFocusLost(evt);
+            }
+        });
+        jTrialPrefixTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jTrialPrefixTextFieldActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout inputModelPanelLayout = new javax.swing.GroupLayout(inputModelPanel);
         inputModelPanel.setLayout(inputModelPanelLayout);
         inputModelPanelLayout.setHorizontalGroup(
@@ -340,17 +357,21 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
                     .addComponent(jLabel3)
                     .addComponent(jLabel4)
                     .addComponent(jLabel13)
-                    .addComponent(jLabel6))
+                    .addComponent(jLabel6)
+                    .addComponent(jLabel1))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(inputModelPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(osimxFilePath, javax.swing.GroupLayout.PREFERRED_SIZE, 708, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(trackedQuantitiesDirPath, javax.swing.GroupLayout.PREFERRED_SIZE, 711, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(InitialGuessDirPath, javax.swing.GroupLayout.PREFERRED_SIZE, 711, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(currentModelFileTextField, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                    .addComponent(currentModelFileTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 764, Short.MAX_VALUE)
+                    .addGroup(inputModelPanelLayout.createSequentialGroup()
+                        .addGroup(inputModelPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(osimxFilePath, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(InitialGuessDirPath, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addGroup(inputModelPanelLayout.createSequentialGroup()
+                                .addComponent(jTrialPrefixTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 322, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(0, 0, Short.MAX_VALUE))
+                            .addComponent(trackedQuantitiesDirPath, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addContainerGap())))
         );
-
-        inputModelPanelLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {InitialGuessDirPath, osimxFilePath, trackedQuantitiesDirPath});
-
         inputModelPanelLayout.setVerticalGroup(
             inputModelPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(inputModelPanelLayout.createSequentialGroup()
@@ -361,15 +382,19 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
                 .addGroup(inputModelPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel3)
                     .addComponent(osimxFilePath, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGap(36, 36, 36)
                 .addGroup(inputModelPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(InitialGuessDirPath, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel4))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jLabel4)
+                    .addComponent(InitialGuessDirPath, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(30, 30, 30)
                 .addGroup(inputModelPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(trackedQuantitiesDirPath, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel6))
-                .addGap(16, 16, 16))
+                    .addComponent(jLabel6)
+                    .addComponent(trackedQuantitiesDirPath, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(inputModelPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel1)
+                    .addComponent(jTrialPrefixTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         jCoordinatesListPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder(org.openide.util.NbBundle.getMessage(TreatmentOptimizationJPanel.class, "TreatmentOptimizationJPanel.jCoordinatesListPanel2.border.title"))); // NOI18N
@@ -405,7 +430,7 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
             .addGroup(jCoordinatesListPanel2Layout.createSequentialGroup()
                 .addGap(98, 98, 98)
                 .addComponent(jButtonEditSettingsCoordinateList)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(289, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout inputOutputPanelLayout = new javax.swing.GroupLayout(inputOutputPanel);
@@ -425,7 +450,7 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
             inputOutputPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(inputOutputPanelLayout.createSequentialGroup()
                 .addComponent(inputModelPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(8, 8, 8)
+                .addGap(9, 9, 9)
                 .addComponent(outputPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jSolverSettingsPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -650,7 +675,7 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
                 .addComponent(editCostTermButton)
                 .addGap(14, 14, 14)
                 .addComponent(deleteCostTermButton)
-                .addContainerGap(346, Short.MAX_VALUE))
+                .addContainerGap(460, Short.MAX_VALUE))
         );
 
         jConstTermsPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(org.openide.util.NbBundle.getMessage(TreatmentOptimizationJPanel.class, "TreatmentOptimizationJPanel.jConstTermsPanel.border.title"))); // NOI18N
@@ -739,25 +764,10 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
         );
     }// </editor-fold>//GEN-END:initComponents
 
-    private void osimxFilePathStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_osimxFilePathStateChanged
-        // TODO add your handling code here:
-        treatmentOptimizationToolModel.setInputOsimxFile(osimxFilePath.getFileName());
-    }//GEN-LAST:event_osimxFilePathStateChanged
-
-    private void InitialGuessDirPathStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_InitialGuessDirPathStateChanged
-        // TODO add your handling code here:
-        treatmentOptimizationToolModel.setInitialGuessDir(InitialGuessDirPath.getFileName());
-    }//GEN-LAST:event_InitialGuessDirPathStateChanged
-
     private void outputDirPathStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_outputDirPathStateChanged
         // TODO add your handling code here:
         treatmentOptimizationToolModel.setOutputResultDir(outputDirPath.getFileName());
     }//GEN-LAST:event_outputDirPathStateChanged
-
-    private void trackedQuantitiesDirPathStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_trackedQuantitiesDirPathStateChanged
-        // TODO add your handling code here:
-        treatmentOptimizationToolModel.setTrackedQuantitiesDir(trackedQuantitiesDirPath.getFileName());
-    }//GEN-LAST:event_trackedQuantitiesDirPathStateChanged
 
     private void deleteConstraintTermButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteConstraintTermButtonActionPerformed
         // TODO add your handling code here:
@@ -967,6 +977,31 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
         OpenSimObject.setSerializeAllDefaults(false);
     }//GEN-LAST:event_jRadioButton2ActionPerformed
 
+    private void trackedQuantitiesDirPathStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_trackedQuantitiesDirPathStateChanged
+        // TODO add your handling code here:
+        treatmentOptimizationToolModel.setTrackedQuantitiesDir(trackedQuantitiesDirPath.getFileName());
+    }//GEN-LAST:event_trackedQuantitiesDirPathStateChanged
+
+    private void InitialGuessDirPathStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_InitialGuessDirPathStateChanged
+        // TODO add your handling code here:
+        treatmentOptimizationToolModel.setInitialGuessDir(InitialGuessDirPath.getFileName());
+    }//GEN-LAST:event_InitialGuessDirPathStateChanged
+
+    private void osimxFilePathStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_osimxFilePathStateChanged
+        // TODO add your handling code here:
+        treatmentOptimizationToolModel.setInputOsimxFile(osimxFilePath.getFileName());
+    }//GEN-LAST:event_osimxFilePathStateChanged
+
+    private void jTrialPrefixTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTrialPrefixTextFieldActionPerformed
+        // TODO add your handling code here:
+        treatmentOptimizationToolModel.setTrialPrefix(jTrialPrefixTextField.getText());
+    }//GEN-LAST:event_jTrialPrefixTextFieldActionPerformed
+
+    private void jTrialPrefixTextFieldFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jTrialPrefixTextFieldFocusLost
+        // TODO add your handling code here:
+         treatmentOptimizationToolModel.setTrialPrefix(jTrialPrefixTextField.getText());
+    }//GEN-LAST:event_jTrialPrefixTextFieldFocusLost
+
     @Override
     public void update(Observable o, Object o1) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
@@ -988,6 +1023,7 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
        osimxFilePath.setFileName(treatmentOptimizationToolModel.getInputOsimxFile());
        InitialGuessDirPath.setFileName(treatmentOptimizationToolModel.getInitialGuessDir());
        trackedQuantitiesDirPath.setFileName(treatmentOptimizationToolModel.getTrackedQuantitiesDir());
+       jTrialPrefixTextField.setText(treatmentOptimizationToolModel.getTrialPrefix());
        outputDirPath.setFileName(treatmentOptimizationToolModel.getOutputResultDir());
        solverSettingsFilePath.setFileName(treatmentOptimizationToolModel.getOCSettingsFile());
        jCoordinateListTextArea1.setText(treatmentOptimizationToolModel.getPropCoordinateListString().toString());
@@ -1039,6 +1075,7 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
     private javax.swing.JPanel jCoordinatesListPanel3;
     private javax.swing.JList<String> jCostTermList;
     private javax.swing.JPanel jCostTermsPanel;
+    private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel13;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
@@ -1061,6 +1098,7 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
     private javax.swing.JPanel jSynergyControllerDetailsPanel1;
     private javax.swing.JTextArea jSynergyCoordinateListTextArea;
     private javax.swing.JTabbedPane jTabbedPane1;
+    private javax.swing.JTextField jTrialPrefixTextField;
     private org.opensim.swingui.FileTextFieldAndChooser osimxFilePath;
     private org.opensim.swingui.FileTextFieldAndChooser outputDirPath;
     private javax.swing.JPanel outputPanel;
