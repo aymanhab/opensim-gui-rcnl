@@ -69,6 +69,7 @@ public class CostTermModel {
                 return PropertyStringList.updAs(costTerm.updPropertyByName("marker_list"));
             case "body":
                 costTerm.getPropertyByName("axes").setValueIsDefault(false);
+                costTerm.getPropertyByName("sequence").setValueIsDefault(false);
                 return PropertyStringList.updAs(costTerm.updPropertyByName("body_list"));
             case "hindfoot_body":
                 costTerm.getPropertyByName("axes").setValueIsDefault(false);
