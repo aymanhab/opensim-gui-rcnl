@@ -67,6 +67,7 @@ public class ConstraintTermModel {
                 return PropertyStringList.updAs(constraintTerm.updPropertyByName("marker_list"));
             case "body":
                 constraintTerm.getPropertyByName("axes").setValueIsDefault(false);
+                constraintTerm.getPropertyByName("sequence").setValueIsDefault(false);
                 return PropertyStringList.updAs(constraintTerm.updPropertyByName("body_list"));
             case "hindfoot_body":
                 constraintTerm.getPropertyByName("axes").setValueIsDefault(false);
