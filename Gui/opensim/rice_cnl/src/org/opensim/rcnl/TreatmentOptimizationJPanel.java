@@ -1174,7 +1174,11 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
         dObject.updPropertyByName("optimal_control_solver_settings_file").setValueIsDefault(false);
         dObject.updPropertyByName("optimal_control_solver_settings_file").setValueIsDefault(false);
 
-
+        AbstractProperty synergyController = dObject.getPropertyByName("RCNLSynergyController");
+        OpenSimObject synergyControllerProperties = PropertyObjectList.getAs(synergyController).getValue(0);
+        if (synergyControllerProperties.getPropertyByName("surrogate_model_data_directory").getValueIsDefault()){
+            synergyController.setValueIsDefault(true);
+        }
 
         AbstractProperty costTermSet = dObject.getPropertyByName("RCNLCostTermSet");
         costTermSet.setValueIsDefault(false);
@@ -1182,6 +1186,17 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
         for (int i=0; i< costTermList.size(); i++){
             OpenSimObject costTerm = costTermList.getValue(i);
             costTerm.updPropertyByName("max_allowable_error").setValueIsDefault(false);
+
+            if (!costTerm.getPropertyByName("marker_list").getValueIsDefault()){
+                costTerm.updPropertyByName("axes").setValueIsDefault(false);
+            }
+            else if (!costTerm.getPropertyByName("body_list").getValueIsDefault()) {
+                costTerm.updPropertyByName("axes").setValueIsDefault(false);
+                costTerm.updPropertyByName("sequence").setValueIsDefault(false);
+            }
+            else if (!costTerm.getPropertyByName("hindfoot_body_list").getValueIsDefault()) {
+                costTerm.updPropertyByName("axes").setValueIsDefault(false);
+            }
         }
         AbstractProperty constraintTermSet = dObject.getPropertyByName("RCNLConstraintTermSet");
         constraintTermSet.setValueIsDefault(false);
@@ -1190,6 +1205,17 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
             OpenSimObject constraintTerm = constraintTermList.getValue(i);
             constraintTerm.updPropertyByName("max_error").setValueIsDefault(false);
             constraintTerm.updPropertyByName("min_error").setValueIsDefault(false);
+           
+            if (!constraintTerm.getPropertyByName("marker_list").getValueIsDefault()){
+                constraintTerm.updPropertyByName("axes").setValueIsDefault(false);
+            }
+            else if (!constraintTerm.getPropertyByName("body_list").getValueIsDefault()) {
+                constraintTerm.updPropertyByName("axes").setValueIsDefault(false);
+                constraintTerm.updPropertyByName("sequence").setValueIsDefault(false);
+            }
+            else if (!constraintTerm.getPropertyByName("hindfoot_body_list").getValueIsDefault()) {
+                constraintTerm.updPropertyByName("axes").setValueIsDefault(false);
+            }
         }
         dObject.updPropertyByName("trial_name").setValueIsDefault(false);
         dObject.updPropertyByName("joint_position_range_scale_factor").setValueIsDefault(false);

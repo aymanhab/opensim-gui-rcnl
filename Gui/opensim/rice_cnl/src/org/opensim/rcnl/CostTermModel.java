@@ -56,24 +56,21 @@ public class CostTermModel {
                 return PropertyStringList.updAs(costTerm.updPropertyByName("coordinate_list"));
             case "load":
                 return PropertyStringList.updAs(costTerm.updPropertyByName("load_list"));
-            case "muscle":
-                return PropertyStringList.updAs(costTerm.updPropertyByName("muscle_list"));
             case "force":
                 return PropertyStringList.updAs(costTerm.updPropertyByName("force_list"));
+            case "muscle":
+                return PropertyStringList.updAs(costTerm.updPropertyByName("muscle_list"));
             case "moment":
                 return PropertyStringList.updAs(costTerm.updPropertyByName("moment_list"));
             case "controller":
                 return PropertyStringList.updAs(costTerm.updPropertyByName("controller_list"));
             case "marker":
-                costTerm.getPropertyByName("axes").setValueIsDefault(false);
                 return PropertyStringList.updAs(costTerm.updPropertyByName("marker_list"));
             case "body":
-                costTerm.getPropertyByName("axes").setValueIsDefault(false);
-                costTerm.getPropertyByName("sequence").setValueIsDefault(false);
                 return PropertyStringList.updAs(costTerm.updPropertyByName("body_list"));
             case "hindfoot_body":
-                costTerm.getPropertyByName("axes").setValueIsDefault(false);
                 return PropertyStringList.updAs(costTerm.updPropertyByName("hindfoot_body_list"));
+            
        }
         return PropertyStringList.updAs(costTerm.updPropertyByName("coordinate_list"));
     }
