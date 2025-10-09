@@ -9,6 +9,8 @@ import java.awt.Dialog;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Vector;
@@ -1015,30 +1017,52 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
     @Override
     public void loadSettings(String nmsmFilename) {
         String fileName = BaseToolPanel.stripOuterTags(nmsmFilename);
+        String settingsFilePath = Paths.get(fileName).getParent().toString();
         Model model = OpenSimDB.getInstance().getCurrentModel();
         
-       //if(model==null) throw new IOException("JointPersonalizationJPanel got null model");
-       treatmentOptimizationToolModel = new TreatmentOptimizationToolModel(model, fileName);
-       currentModelFileTextField.setText(treatmentOptimizationToolModel.getInputModelFile());
-       osimxFilePath.setFileName(treatmentOptimizationToolModel.getInputOsimxFile());
-       InitialGuessDirPath.setFileName(treatmentOptimizationToolModel.getInitialGuessDir());
-       trackedQuantitiesDirPath.setFileName(treatmentOptimizationToolModel.getTrackedQuantitiesDir());
-       jTrialPrefixTextField.setText(treatmentOptimizationToolModel.getTrialPrefix());
-       outputDirPath.setFileName(treatmentOptimizationToolModel.getOutputResultDir());
-       solverSettingsFilePath.setFileName(treatmentOptimizationToolModel.getOCSettingsFile());
-       jCoordinateListTextArea1.setText(treatmentOptimizationToolModel.getPropCoordinateListString().toString());
-       
-       // Controllers tab
-       jOptimizeSynVecCheckBox.setSelected(treatmentOptimizationToolModel.getOptimizeSynergyVector());
-       jSynergyCoordinateListTextArea.setText(treatmentOptimizationToolModel.getRCNLSynergyCoordinateListString().toString());
-       surrogateModelDirPath.setFileName(treatmentOptimizationToolModel.getSurrogateModelDir());
-       jCoordinateListTorqueControllerTextArea.setText(treatmentOptimizationToolModel.getRCNLTorqueCoordinateListString().toString());
-       
-       // Cost+Constraints
-       costTermListModel = new CostTermListModel(treatmentOptimizationToolModel.getCostTermListAsObjectList());
-       jCostTermList.setModel(costTermListModel);
-       constraintTermListModel = new ConstraintTermListModel(treatmentOptimizationToolModel.getConstraintTermListAsObjectList());
-       jConstraintTermList.setModel(constraintTermListModel);
+        //if(model==null) throw new IOException("JointPersonalizationJPanel got null model");
+        treatmentOptimizationToolModel = new TreatmentOptimizationToolModel(model, fileName);
+
+        String resultsDirectory = treatmentOptimizationToolModel.getOutputResultDir();
+        String absoluteResultsDirectory = FileUtils.makePathAbsolute(resultsDirectory, settingsFilePath);
+        outputDirPath.setFileName(absoluteResultsDirectory);
+        
+        String initialGuessDirectory = treatmentOptimizationToolModel.getInitialGuessDir();
+        String absoluteInitialGuessDirectory = FileUtils.makePathAbsolute(initialGuessDirectory, settingsFilePath);
+        InitialGuessDirPath.setFileName(absoluteInitialGuessDirectory);
+
+        String trackedQuantitiesDirectory = treatmentOptimizationToolModel.getTrackedQuantitiesDir();
+        String absoluteTrackedQuantitiesDirectory = FileUtils.makePathAbsolute(trackedQuantitiesDirectory, settingsFilePath);
+        trackedQuantitiesDirPath.setFileName(absoluteTrackedQuantitiesDirectory);
+
+        String osimxFile = treatmentOptimizationToolModel.getInputOsimxFile();
+        String absoluteOsimxFile = FileUtils.makePathAbsolute(osimxFile, settingsFilePath);
+        osimxFilePath.setFileName(absoluteOsimxFile);
+
+        String solverSettingsFile = treatmentOptimizationToolModel.getOCSettingsFile();
+        String absoluteSolverSettingsFile = FileUtils.makePathAbsolute(solverSettingsFile, settingsFilePath);
+        solverSettingsFilePath.setFileName(absoluteSolverSettingsFile);
+
+        String surrogateModelDirectory = treatmentOptimizationToolModel.getSurrogateModelDir();
+        String absoluteSurrogateModelDirectory = FileUtils.makePathAbsolute(surrogateModelDirectory, settingsFilePath);
+        surrogateModelDirPath.setFileName(absoluteSurrogateModelDirectory);
+
+
+        currentModelFileTextField.setText(treatmentOptimizationToolModel.getInputModelFile());
+        jTrialPrefixTextField.setText(treatmentOptimizationToolModel.getTrialPrefix());
+        jCoordinateListTextArea1.setText(treatmentOptimizationToolModel.getPropCoordinateListString().toString());
+        
+        // Controllers tab
+        jOptimizeSynVecCheckBox.setSelected(treatmentOptimizationToolModel.getOptimizeSynergyVector());
+        jSynergyCoordinateListTextArea.setText(treatmentOptimizationToolModel.getRCNLSynergyCoordinateListString().toString());
+        surrogateModelDirPath.setFileName(treatmentOptimizationToolModel.getSurrogateModelDir());
+        jCoordinateListTorqueControllerTextArea.setText(treatmentOptimizationToolModel.getRCNLTorqueCoordinateListString().toString());
+        
+        // Cost+Constraints
+        costTermListModel = new CostTermListModel(treatmentOptimizationToolModel.getCostTermListAsObjectList());
+        jCostTermList.setModel(costTermListModel);
+        constraintTermListModel = new ConstraintTermListModel(treatmentOptimizationToolModel.getConstraintTermListAsObjectList());
+        jConstraintTermList.setModel(constraintTermListModel);
     }  
 
     @Override
@@ -1138,11 +1162,63 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
     }
     @Override
     public void saveSettings(String fileName) {
-         String fullFilename = FileUtils.addExtensionIfNeeded(fileName, ".xml");
+        String settingsFilePath = Paths.get(fileName).getParent().toString();
+
+        String resultsDirectory = treatmentOptimizationToolModel.getOutputResultDir();
+        String initialGuessDirectory = treatmentOptimizationToolModel.getInitialGuessDir();
+        String trackedQuantitiesDirectory = treatmentOptimizationToolModel.getTrackedQuantitiesDir();
+        String inputOsimxFile = treatmentOptimizationToolModel.getInputOsimxFile();
+        String optimalControlSolverSettingsFile = treatmentOptimizationToolModel.getOCSettingsFile();
+        String surrogateModelDataDirectory = treatmentOptimizationToolModel.getSurrogateModelDir();
+
+        Path resultsDirectoryPath = Paths.get(resultsDirectory);
+        String relativeResultsDir = FileUtils.makePathRelative(resultsDirectory, settingsFilePath);
+        if (relativeResultsDir != null && resultsDirectoryPath!=null && resultsDirectoryPath.isAbsolute()){
+            treatmentOptimizationToolModel.setOutputResultDir(relativeResultsDir);
+        }
+
+        Path initialGuessDirectoryPath = Paths.get(initialGuessDirectory);
+        String relativeInitialGuessDir = FileUtils.makePathRelative(initialGuessDirectory, settingsFilePath);
+        if (relativeInitialGuessDir != null && initialGuessDirectoryPath!=null && initialGuessDirectoryPath.isAbsolute()){
+            treatmentOptimizationToolModel.setInitialGuessDir(relativeInitialGuessDir);
+        }
+
+        Path trackedQuantitiesDirectoryPath = Paths.get(trackedQuantitiesDirectory);
+        String relativeTrackedQuantitiesDir = FileUtils.makePathRelative(trackedQuantitiesDirectory, settingsFilePath);
+        if (relativeTrackedQuantitiesDir != null && trackedQuantitiesDirectoryPath!=null && trackedQuantitiesDirectoryPath.isAbsolute()){
+            treatmentOptimizationToolModel.setTrackedQuantitiesDir(relativeTrackedQuantitiesDir);
+        }
+
+        Path inputOsimxFilePath = Paths.get(inputOsimxFile);
+        String relativeInputOsimxFile = FileUtils.makePathRelative(inputOsimxFile, settingsFilePath);
+        if (relativeInputOsimxFile != null && inputOsimxFilePath!=null && inputOsimxFilePath.isAbsolute()){
+            treatmentOptimizationToolModel.setInputOsimxFile(relativeInputOsimxFile);
+        }
+
+        Path optimalControlSolverSettingsFilePath = Paths.get(optimalControlSolverSettingsFile);
+        String relativeOptimalControlSolverSettingsFile = FileUtils.makePathRelative(optimalControlSolverSettingsFile, settingsFilePath);
+        if (relativeOptimalControlSolverSettingsFile != null && optimalControlSolverSettingsFilePath!=null && optimalControlSolverSettingsFilePath.isAbsolute()){
+            treatmentOptimizationToolModel.setOCSettingsFile(relativeOptimalControlSolverSettingsFile);
+        }
+
+        Path surrogateModelDataDirectoryPath = Paths.get(surrogateModelDataDirectory);
+        String relativeSurrogateModelDataDirectory = FileUtils.makePathRelative(surrogateModelDataDirectory, settingsFilePath);
+        if (relativeSurrogateModelDataDirectory != null && surrogateModelDataDirectoryPath!=null && surrogateModelDataDirectoryPath.isAbsolute()){
+            treatmentOptimizationToolModel.setSurrogateModelDir(relativeSurrogateModelDataDirectory);
+        }
+
+        String fullFilename = FileUtils.addExtensionIfNeeded(fileName, ".xml");
         OpenSimObject obj = treatmentOptimizationToolModel.getToolAsObject();
         forceWritableProperties(obj);
         obj.print(fullFilename);
         replaceOpenSimDocumentTags(fullFilename);
+
+        treatmentOptimizationToolModel.setOutputResultDir(resultsDirectory);
+        treatmentOptimizationToolModel.setInitialGuessDir(initialGuessDirectory);
+        treatmentOptimizationToolModel.setTrackedQuantitiesDir(trackedQuantitiesDirectory);
+        treatmentOptimizationToolModel.setInputOsimxFile(inputOsimxFile);
+        treatmentOptimizationToolModel.setOCSettingsFile(optimalControlSolverSettingsFile);
+        treatmentOptimizationToolModel.setSurrogateModelDir(surrogateModelDataDirectory);
    }
 
     @Override

@@ -10,6 +10,8 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Vector;
@@ -309,29 +311,47 @@ public class JointPersonalizationJPanel extends BaseToolPanel  implements Observ
 
     @Override
     public void saveSettings(String fileName) {
+        
+        String settingsFilePath = Paths.get(fileName).getParent().toString();
+
+        String outputModelFileName = jointPersonalizationToolModel.getOutputModelFile();
+
+        Path outputModelFileNamePath = Paths.get(outputModelFileName);
+        String relativeOutputModelFileName = FileUtils.makePathRelative(outputModelFileName, settingsFilePath);
+        if (relativeOutputModelFileName != null && outputModelFileNamePath != null && outputModelFileNamePath.isAbsolute()){
+            jointPersonalizationToolModel.setOutputModelFile(outputModelFileName);
+        }
+
         String fullFilename = FileUtils.addExtensionIfNeeded(fileName, ".xml");
         OpenSimObject obj = jointPersonalizationToolModel.getToolAsObject();
         forceWritableProperties(obj);
         obj.print(fullFilename);
         replaceOpenSimDocumentTags(fullFilename);
+        
+        // jointPersonalizationToolModel.setOutputModelFile(outputModelFileName);
     }
 
     @Override
     public void loadSettings(String nmsmFilename) {
         String fileName = BaseToolPanel.stripOuterTags(nmsmFilename);
+        String settingsFilePath = Paths.get(fileName).getParent().toString();
         Model model = OpenSimDB.getInstance().getCurrentModel();
-       //if(model==null) throw new IOException("JointPersonalizationJPanel got null model");
-       jointPersonalizationToolModel = new JointPersonalizationToolModel(model, fileName);
-       File f= new File(fileName); 
-       f.delete();
-       jointPersonalizationTaskListModel = new JMPTaskListModel(jointPersonalizationToolModel.getJointTaskListAsObjectList());
-       listSelectionModel = jJointPersonalizationList.getSelectionModel();
-       listSelectionModel.addListSelectionListener( new ListSelectionHandler());
-       //initComponents(); Panel already constructed, no need to re-initComponents
-       jJointPersonalizationList.setModel(jointPersonalizationTaskListModel);
-       currentModelFileTextField.setText(jointPersonalizationToolModel.getInputModelFile());
-       outputModelFilePath.setFileName(jointPersonalizationToolModel.getOutputModelFile());
-       setSettingsFileDescription("Save Joint Personalization Settings file (xml)");
+        //if(model==null) throw new IOException("JointPersonalizationJPanel got null model");
+        jointPersonalizationToolModel = new JointPersonalizationToolModel(model, fileName);
+
+        String outputModelFile = jointPersonalizationToolModel.getOutputModelFile();
+        String absoluteOutputModelFile = FileUtils.makePathAbsolute(outputModelFile, settingsFilePath);
+        outputModelFilePath.setFileName(absoluteOutputModelFile);
+
+        File f= new File(fileName); 
+        f.delete();
+        jointPersonalizationTaskListModel = new JMPTaskListModel(jointPersonalizationToolModel.getJointTaskListAsObjectList());
+        listSelectionModel = jJointPersonalizationList.getSelectionModel();
+        listSelectionModel.addListSelectionListener( new ListSelectionHandler());
+        //initComponents(); Panel already constructed, no need to re-initComponents
+        jJointPersonalizationList.setModel(jointPersonalizationTaskListModel);
+        currentModelFileTextField.setText(jointPersonalizationToolModel.getInputModelFile());
+        setSettingsFileDescription("Save Joint Personalization Settings file (xml)");
     }
 
     @Override
@@ -356,7 +376,7 @@ public class JointPersonalizationJPanel extends BaseToolPanel  implements Observ
             ithTask.updPropertyByName("marker_file_name").setValueIsDefault(false);
             ithTask.updPropertyByName("time_range").setValueIsDefault(false);
             PropertyObjectList poJointList = PropertyObjectList.updAs(apJnts);
-             for (int j=0; j<poJointList.size(); j++){
+            for (int j=0; j<poJointList.size(); j++){
                 poJointList.getValue(j).updPropertyByName("parent_frame_transformation").setValueIsDefault(false);
                 AbstractProperty ParentFrameTransformation = poJointList.getValue(j).getPropertyByName("parent_frame_transformation");
                 OpenSimObject ParentFrameTransformationObject = PropertyObjectList.getAs(ParentFrameTransformation).getValue(0);

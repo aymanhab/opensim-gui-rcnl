@@ -400,26 +400,33 @@ public class GCPPersonalizationJPanel extends BaseToolPanel  implements Observer
     @Override
     public void loadSettings(String nmsmFilename) {
         String fileName = BaseToolPanel.stripOuterTags(nmsmFilename);
+        String settingsFilePath = Paths.get(fileName).getParent().toString();
         Model model = OpenSimDB.getInstance().getCurrentModel();
-       //if(model==null) throw new IOException("JointPersonalizationJPanel got null model");
-       gcpPersonalizationToolModel = new GCPPersonalizationToolModel(model, fileName);
-       osimxFilePath.setFileName(gcpPersonalizationToolModel.getInputOsimxFile());
-       inputDirPath.setFileName(gcpPersonalizationToolModel.getDataDir());
+        gcpPersonalizationToolModel = new GCPPersonalizationToolModel(model, fileName);
 
-       outputResultDirPath.setFileName(gcpPersonalizationToolModel.getOutputResultDir());
-       // Convert relative to absolute paths if needed
-       if (gcpPersonalizationToolModel.getDataDir()!= null){
-           String curInputMotionfile = FileUtils.makePathAbsolute(gcpPersonalizationToolModel.getInputMotionFile(), gcpPersonalizationToolModel.getDataDir());
-           String curInputGRFfile = FileUtils.makePathAbsolute(gcpPersonalizationToolModel.geInputGRFFile(), gcpPersonalizationToolModel.getDataDir());
-           gcpPersonalizationToolModel.setInputMotionFile(curInputMotionfile);
-           gcpPersonalizationToolModel.setInputGRFFile(curInputGRFfile);
-       }
-       motionFilePath.setFileName(gcpPersonalizationToolModel.getInputMotionFile());
-       grfFilePath.setFileName(gcpPersonalizationToolModel.geInputGRFFile());
-       addGCPSurfaceButton.setEnabled(grfFilePath.getFileIsValid() && grfFilePath.getFileName().length()>0);
-       surfaceListProp = gcpPersonalizationToolModel.getGCPContactSurfaceSet();
-       gcpListModel = new GCPSurfaceListModel(surfaceListProp);
-       GCPContactSurfaceList.setModel(gcpListModel);
+        // Convert to absolute paths
+        String resultsDirectory = gcpPersonalizationToolModel.getOutputResultDir();
+        String absoluteResultsDirectory = FileUtils.makePathAbsolute(resultsDirectory, settingsFilePath);
+        outputResultDirPath.setFileName(absoluteResultsDirectory);
+
+        String inputOsimxFile = gcpPersonalizationToolModel.getInputOsimxFile();
+        String absoluteOsimxFile = FileUtils.makePathAbsolute(inputOsimxFile, settingsFilePath);
+        osimxFilePath.setFileName(absoluteOsimxFile);
+
+        String inputMotionFile = gcpPersonalizationToolModel.getInputMotionFile();
+        String absoluteMotionFile = FileUtils.makePathAbsolute(inputMotionFile, settingsFilePath);
+        motionFilePath.setFileName(absoluteMotionFile);
+
+        String inputGRFFile = gcpPersonalizationToolModel.geInputGRFFile();
+        String absoluteGRFFile = FileUtils.makePathAbsolute(inputGRFFile, settingsFilePath);
+        grfFilePath.setFileName(absoluteGRFFile);
+
+        motionFilePath.setFileName(gcpPersonalizationToolModel.getInputMotionFile());
+        grfFilePath.setFileName(gcpPersonalizationToolModel.geInputGRFFile());
+        addGCPSurfaceButton.setEnabled(grfFilePath.getFileIsValid() && grfFilePath.getFileName().length()>0);
+        surfaceListProp = gcpPersonalizationToolModel.getGCPContactSurfaceSet();
+        gcpListModel = new GCPSurfaceListModel(surfaceListProp);
+        GCPContactSurfaceList.setModel(gcpListModel);
     }
 
     @Override
@@ -429,21 +436,39 @@ public class GCPPersonalizationJPanel extends BaseToolPanel  implements Observer
 
     @Override
     public void saveSettings(String fileName) {
-        
-        // Before saving the settings, we need to make motion file and grf file relative to input_directory
-        String inputDir = gcpPersonalizationToolModel.getDataDir();
-        String saveInputMotion = gcpPersonalizationToolModel.getInputMotionFile();
-        String saveGRFfile = gcpPersonalizationToolModel.geInputGRFFile();
+        String settingsFilePath = Paths.get(fileName).getParent().toString();
 
-        if (inputDir != null){
-            // Abort
-            String relativeMotionFile = FileUtils.makePathRelative(saveInputMotion, inputDir);
-            if (relativeMotionFile != null)
-                gcpPersonalizationToolModel.setInputMotionFile(relativeMotionFile);
-            String relativeGRFFile = FileUtils.makePathRelative(saveGRFfile, inputDir);
-            if (relativeGRFFile != null)
-                gcpPersonalizationToolModel.setInputGRFFile(relativeGRFFile);
+        // Convert all file names and directories to relative paths
+        String inputMotionFileName = gcpPersonalizationToolModel.getInputMotionFile();
+        String inputGrfFileName = gcpPersonalizationToolModel.geInputGRFFile();
+        String osimxFileName = gcpPersonalizationToolModel.getInputOsimxFile();
+        String inputModelFileName = gcpPersonalizationToolModel.getInputModelFile();
+        String resultsDirectory = gcpPersonalizationToolModel.getOutputResultDir();
+
+        Path inputMotionAbsolutePath = Paths.get(inputMotionFileName).getParent();
+        String relativeMotionFile = FileUtils.makePathRelative(inputMotionFileName, settingsFilePath);
+        if (relativeMotionFile != null && inputMotionAbsolutePath!=null && inputMotionAbsolutePath.isAbsolute()){
+            gcpPersonalizationToolModel.setInputMotionFile(relativeMotionFile);
         }
+
+        Path inputGRFAbsolutePath = Paths.get(inputGrfFileName).getParent();
+        String relativeGRFFile = FileUtils.makePathRelative(inputGrfFileName, settingsFilePath);
+        if (relativeGRFFile != null && inputGRFAbsolutePath!=null && inputGRFAbsolutePath.isAbsolute()){
+            gcpPersonalizationToolModel.setInputGRFFile(relativeGRFFile);
+        }
+
+        Path osimxAbsolutePath = Paths.get(osimxFileName).getParent();
+        String relativeOsimxFile = FileUtils.makePathRelative(osimxFileName, settingsFilePath);
+        if (relativeOsimxFile != null && osimxAbsolutePath!=null && osimxAbsolutePath.isAbsolute()){
+            gcpPersonalizationToolModel.setInputOsimxFile(relativeOsimxFile);
+        }
+
+        Path resultsAbsolutePath = Paths.get(resultsDirectory);
+        String relativeResultsDir = FileUtils.makePathRelative(resultsDirectory, settingsFilePath);
+        if (relativeResultsDir != null && resultsAbsolutePath!=null && resultsAbsolutePath.isAbsolute()){
+            gcpPersonalizationToolModel.setOutputResultDir(relativeResultsDir);
+        }
+
         // Set proprties from relative path
         String fullFilename = FileUtils.addExtensionIfNeeded(fileName, ".xml");
         OpenSimObject obj = gcpPersonalizationToolModel.getToolAsObject();
@@ -451,8 +476,10 @@ public class GCPPersonalizationJPanel extends BaseToolPanel  implements Observer
         gcpPersonalizationToolModel.getToolAsObject().print(fullFilename);
         replaceOpenSimDocumentTags(fullFilename);
         // Restore from model
-        gcpPersonalizationToolModel.setInputMotionFile(saveInputMotion);
-        gcpPersonalizationToolModel.setInputGRFFile(saveGRFfile);
+        gcpPersonalizationToolModel.setInputMotionFile(inputMotionFileName);
+        gcpPersonalizationToolModel.setInputGRFFile(inputGrfFileName);
+        gcpPersonalizationToolModel.setInputOsimxFile(osimxFileName);
+        gcpPersonalizationToolModel.setOutputResultDir(resultsDirectory);
     }
 
 
@@ -463,13 +490,11 @@ public class GCPPersonalizationJPanel extends BaseToolPanel  implements Observer
     private javax.swing.JButton deleteGCPSurfaceButton;
     private javax.swing.JButton editGCPSurfaceButton;
     private org.opensim.swingui.FileTextFieldAndChooser grfFilePath;
-    private org.opensim.swingui.FileTextFieldAndChooser inputDirPath;
     private javax.swing.JPanel inputModelPanel;
     private javax.swing.JLabel jLabel11;
     private javax.swing.JLabel jLabel13;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
-    private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
@@ -500,7 +525,6 @@ public class GCPPersonalizationJPanel extends BaseToolPanel  implements Observer
         super.forceWritableProperties(dObject); //To change body of generated methods, choose Tools | Templates.
         dObject.updPropertyByName("results_directory").setValueIsDefault(false);
         dObject.updPropertyByName("input_osimx_file").setValueIsDefault(false);
-        dObject.updPropertyByName("input_directory").setValueIsDefault(false);
         dObject.updPropertyByName("input_model_file").setValueIsDefault(false);
 
         dObject.updPropertyByName("kinematics_filter_cutoff").setValueIsDefault(false);

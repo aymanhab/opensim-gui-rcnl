@@ -140,7 +140,13 @@ public class MTPPersonalizationToolModel {
         return modelName;
     }
     public String getInputModelFile() {
-        return propInputModelFileString.getValue(0);
+        if (propInputModelFileString.size()==1)
+            return propInputModelFileString.getValue(0);
+        return "";
+    }
+
+    public void setInputModelFile(String newFileName) {
+        propInputModelFileString.setValue(newFileName);
     }
 
     /**

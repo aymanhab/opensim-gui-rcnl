@@ -10,6 +10,8 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Vector;
@@ -572,21 +574,38 @@ public class NCPPersonalizationJPanel extends BaseToolPanel  implements Observer
     @Override
     public void loadSettings(String nmsmFilename) {
         String fileName = BaseToolPanel.stripOuterTags(nmsmFilename);
+        String settingsFilePath = Paths.get(fileName).getParent().toString();
         Model model = OpenSimDB.getInstance().getCurrentModel();
-       //if(model==null) throw new IOException("JointPersonalizationJPanel got null model");
-       ncpPersonalizationToolModel = new NCPPersonalizationToolModel(model, fileName);
-       File f= new File(fileName);   f.delete();
-       osimxFilePath.setFileName(ncpPersonalizationToolModel.getInputOsimxFile());
-       dataDirPath.setFileName(ncpPersonalizationToolModel.getDataDir());
-       outputResultDirPath.setFileName(ncpPersonalizationToolModel.getOutputResultDir());
-       jCoordinateListTextArea.setText(ncpPersonalizationToolModel.getPropCoordinateListString().toString());
-       jActivationMGTextArea.setText(ncpPersonalizationToolModel.getPropActivationMGListString().toString());
-       jNormalizedFLMGTextArea.setText(ncpPersonalizationToolModel.getPropNormalizedFLMGListString().toString());
-       passiveDataInputDir.setFileName(ncpPersonalizationToolModel.getPassiveDataDir());
-       setSettingsFileDescription("Save Neural Control Personalization Settings file (xml)");
-       jCheckBoxMTPInitialization.setSelected(ncpPersonalizationToolModel.getEnableInitialization());
-       mTPResultDirPath.setFileName(ncpPersonalizationToolModel.getMTPDir());
-       jSynergySetTextArea.setText(ncpPersonalizationToolModel.getSynergiesAsString());
+        //if(model==null) throw new IOException("JointPersonalizationJPanel got null model");
+        ncpPersonalizationToolModel = new NCPPersonalizationToolModel(model, fileName);
+
+        String resultsDirectory = ncpPersonalizationToolModel.getOutputResultDir();
+        String absoluteResultsDirectory = FileUtils.makePathAbsolute(resultsDirectory, settingsFilePath);
+        outputResultDirPath.setFileName(absoluteResultsDirectory);
+
+        String inputOsimxFile = ncpPersonalizationToolModel.getInputOsimxFile();
+        String absoluteInputOsimxFile = FileUtils.makePathAbsolute(inputOsimxFile, settingsFilePath);
+        osimxFilePath.setFileName(absoluteInputOsimxFile);
+
+        String inputDataDirectory = ncpPersonalizationToolModel.getDataDir();
+        String absoluteInputDataDirectory = FileUtils.makePathAbsolute(inputDataDirectory, settingsFilePath);
+        dataDirPath.setFileName(absoluteInputDataDirectory);
+
+        String passiveDataDirectory = ncpPersonalizationToolModel.getPassiveDataDir();
+        String absolutePassiveDataDirectory = FileUtils.makePathAbsolute(passiveDataDirectory, settingsFilePath);
+        passiveDataInputDir.setFileName(absolutePassiveDataDirectory);
+
+        String mtpResultsDirectory = ncpPersonalizationToolModel.getMTPDir();
+        String absoluteMTPResultsDirectory = FileUtils.makePathAbsolute(mtpResultsDirectory, settingsFilePath);
+        mTPResultDirPath.setFileName(absoluteMTPResultsDirectory);
+
+        File f= new File(fileName);   f.delete();
+        jCoordinateListTextArea.setText(ncpPersonalizationToolModel.getPropCoordinateListString().toString());
+        jActivationMGTextArea.setText(ncpPersonalizationToolModel.getPropActivationMGListString().toString());
+        jNormalizedFLMGTextArea.setText(ncpPersonalizationToolModel.getPropNormalizedFLMGListString().toString());
+        setSettingsFileDescription("Save Neural Control Personalization Settings file (xml)");
+        jCheckBoxMTPInitialization.setSelected(ncpPersonalizationToolModel.getEnableInitialization());
+        jSynergySetTextArea.setText(ncpPersonalizationToolModel.getSynergiesAsString());
     }
 
     @Override
@@ -634,11 +653,55 @@ public class NCPPersonalizationJPanel extends BaseToolPanel  implements Observer
 
     @Override
     public void saveSettings(String fileName) {
+        String settingsFilePath = Paths.get(fileName).getParent().toString();
+
+        String resultsDirectory = ncpPersonalizationToolModel.getOutputResultDir();
+        String inputOsimxFile = ncpPersonalizationToolModel.getInputOsimxFile();
+        String inputDataDirectory = ncpPersonalizationToolModel.getDataDir();
+        String passiveDataDirectory = ncpPersonalizationToolModel.getPassiveDataDir();
+        String mtpResultsDirectory = ncpPersonalizationToolModel.getMTPDir();
+
+        Path resultsDirectoryPath = Paths.get(resultsDirectory);
+        String relativeResultsDirectory = FileUtils.makePathRelative(resultsDirectory, settingsFilePath);
+        if (relativeResultsDirectory != null && resultsDirectoryPath != null && resultsDirectoryPath.isAbsolute()) {
+            ncpPersonalizationToolModel.setOutputResultDir(relativeResultsDirectory);
+        }
+
+        Path inputOsimxFilePath = Paths.get(inputOsimxFile);
+        String relativeInputOsimxFile = FileUtils.makePathRelative(inputOsimxFile, settingsFilePath);
+        if (relativeInputOsimxFile != null && inputOsimxFilePath != null && inputOsimxFilePath.isAbsolute()) {
+            ncpPersonalizationToolModel.setInputOsimxFile(relativeInputOsimxFile);
+        }
+
+        Path inputDataDirectoryPath = Paths.get(inputDataDirectory);
+        String relativeInputDataDirectory = FileUtils.makePathRelative(inputDataDirectory, settingsFilePath);
+        if (relativeInputDataDirectory != null && inputDataDirectoryPath != null && inputDataDirectoryPath.isAbsolute()) {
+            ncpPersonalizationToolModel.setDataDir(relativeInputDataDirectory);
+        }
+
+        Path passiveDataDirectoryPath = Paths.get(passiveDataDirectory);
+        String relativePassiveDataDirectory = FileUtils.makePathRelative(passiveDataDirectory, settingsFilePath);
+        if (relativePassiveDataDirectory != null && passiveDataDirectoryPath != null && passiveDataDirectoryPath.isAbsolute()) {
+            ncpPersonalizationToolModel.setPassiveDataDir(relativePassiveDataDirectory);
+        }  
+
+        Path mtpResultsDirectoryPath = Paths.get(mtpResultsDirectory);
+        String relativeMTPResultsDirectory = FileUtils.makePathRelative(mtpResultsDirectory, settingsFilePath);
+        if (relativeMTPResultsDirectory != null && mtpResultsDirectoryPath != null && mtpResultsDirectoryPath.isAbsolute()) {
+            ncpPersonalizationToolModel.setMTPDir(relativeMTPResultsDirectory);
+        }
+
         String fullFilename = FileUtils.addExtensionIfNeeded(fileName, ".xml");
         OpenSimObject obj = ncpPersonalizationToolModel.getToolAsObject();
         forceWritableProperties(obj);
         obj.print(fullFilename);
         replaceOpenSimDocumentTags(fullFilename);
+
+        ncpPersonalizationToolModel.setOutputResultDir(resultsDirectory);
+        ncpPersonalizationToolModel.setInputOsimxFile(inputOsimxFile);
+        ncpPersonalizationToolModel.setDataDir(inputDataDirectory);
+        ncpPersonalizationToolModel.setPassiveDataDir(passiveDataDirectory);
+        ncpPersonalizationToolModel.setMTPDir(mtpResultsDirectory);
     }
 
     @Override
