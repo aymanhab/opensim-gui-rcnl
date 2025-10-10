@@ -22,6 +22,7 @@ import org.openide.util.Exceptions;
 import org.opensim.modeling.AbstractProperty;
 import org.opensim.modeling.Model;
 import org.opensim.modeling.OpenSimObject;
+import org.opensim.modeling.PropertyHelper;
 import org.opensim.modeling.PropertyObjectList;
 import org.opensim.utils.FileUtils;
 import org.opensim.view.pub.OpenSimDB;
@@ -34,6 +35,7 @@ public class JointPersonalizationJPanel extends BaseToolPanel  implements Observ
     private JointPersonalizationToolModel jointPersonalizationToolModel = null;
     private JMPTaskListModel jointPersonalizationTaskListModel = null;
     private ListSelectionModel listSelectionModel;
+    
     /**
      * Creates new form JointPersonalizationJPanel
      */
@@ -47,6 +49,7 @@ public class JointPersonalizationJPanel extends BaseToolPanel  implements Observ
        listSelectionModel.addListSelectionListener(
                             new ListSelectionHandler());
        currentModelFileTextField.setText(model.getInputFileName());
+       outputModelFilePath.setCheckIfFileExists(false);
        outputModelFilePath.setFileName(jointPersonalizationToolModel.getOutputModelFile());
        setSettingsFileDescription("Save Joint Personalization Settings file (xml)");
     }
@@ -245,6 +248,9 @@ public class JointPersonalizationJPanel extends BaseToolPanel  implements Observ
             jointPersonalizationTaskListModel.addElement(jmpTask);
             AbstractProperty ap = jointPersonalizationToolModel.getToolAsObject().getPropertyByName("JMPTaskList");
             //System.out.println(ap.getTypeName()+" "+ap.isListProperty()+" ");
+            // Before adding the task, adjust index to one past max index on PropertyObjectList
+            AbstractProperty indexProp = jmpTask.getPropertyByName("index");
+            PropertyHelper.setValueInt(getNexTaskIndex(PropertyObjectList.updAs(ap)), indexProp);
             PropertyObjectList.updAs(ap).adoptAndAppendValue(jmpTask);
             PropertyObjectList poList = jointPersonalizationToolModel.getJointTaskListAsObjectList();
             jointPersonalizationTaskListModel = new JMPTaskListModel(poList);
@@ -302,13 +308,17 @@ public class JointPersonalizationJPanel extends BaseToolPanel  implements Observ
     }
 
     @Override
-    public String getToolXML() {
-        return jointPersonalizationToolModel.getToolAsObject().dump();
+    public void saveSettings(String fileName) {
+        String fullFilename = FileUtils.addExtensionIfNeeded(fileName, ".xml");
+        OpenSimObject obj = jointPersonalizationToolModel.getToolAsObject();
+        forceWritableProperties(obj);
+        obj.print(fullFilename);
+        replaceOpenSimDocumentTags(fullFilename);
     }
 
     @Override
     public void loadSettings(String nmsmFilename) {
-        String fileName = super.stripOuterTags(nmsmFilename);
+        String fileName = BaseToolPanel.stripOuterTags(nmsmFilename);
         Model model = OpenSimDB.getInstance().getCurrentModel();
        //if(model==null) throw new IOException("JointPersonalizationJPanel got null model");
        jointPersonalizationToolModel = new JointPersonalizationToolModel(model, fileName);
@@ -329,6 +339,59 @@ public class JointPersonalizationJPanel extends BaseToolPanel  implements Observ
         super.setSettingsFileDescription(description); //To change body of generated methods, choose Tools | Templates.
     }
 
+    @Override
+    void forceWritableProperties(OpenSimObject dObject) {
+        super.forceWritableProperties(dObject); //To change body of generated methods, choose Tools | Templates.
+        // For each JMPTask in tasklist, force write of parent_frame_transformation, child_frame_transformation
+        // dObject is an instance of JointModelPersonalizationTool
+        AbstractProperty ap = dObject.getPropertyByName("JMPTaskList");
+        ap.setValueIsDefault(false);
+        PropertyObjectList olist = PropertyObjectList.getAs(ap);
+        for (int i=0; i< olist.size(); i++){
+            
+            OpenSimObject ithTask = olist.getValue(i);
+            AbstractProperty apJnts = ithTask.getPropertyByName("JMPJointSet");
+            ithTask.updPropertyByName("is_enabled").setValueIsDefault(false);
+            ithTask.updPropertyByName("index").setValueIsDefault(false);
+            ithTask.updPropertyByName("marker_file_name").setValueIsDefault(false);
+            ithTask.updPropertyByName("time_range").setValueIsDefault(false);
+            PropertyObjectList poJointList = PropertyObjectList.updAs(apJnts);
+             for (int j=0; j<poJointList.size(); j++){
+                poJointList.getValue(j).updPropertyByName("parent_frame_transformation").setValueIsDefault(false);
+                AbstractProperty ParentFrameTransformation = poJointList.getValue(j).getPropertyByName("parent_frame_transformation");
+                OpenSimObject ParentFrameTransformationObject = PropertyObjectList.getAs(ParentFrameTransformation).getValue(0);
+                ParentFrameTransformationObject.updPropertyByName("translation_bounds").setValueIsDefault(false);
+                ParentFrameTransformationObject.updPropertyByName("orientation_bounds").setValueIsDefault(false);
+
+                poJointList.getValue(j).updPropertyByName("child_frame_transformation").setValueIsDefault(false);
+                AbstractProperty ChildFrameTransformation = poJointList.getValue(j).getPropertyByName("child_frame_transformation");
+                OpenSimObject ChildFrameTransformationObject = PropertyObjectList.getAs(ParentFrameTransformation).getValue(0);
+                ChildFrameTransformationObject.updPropertyByName("translation_bounds").setValueIsDefault(false);
+                ChildFrameTransformationObject.updPropertyByName("orientation_bounds").setValueIsDefault(false);
+             }
+        }
+        dObject.updPropertyByName("input_directory").setValueIsDefault(false);
+        dObject.updPropertyByName("input_model_file").setValueIsDefault(false);
+        dObject.updPropertyByName("output_model_file").setValueIsDefault(false);
+        dObject.updPropertyByName("allowable_error").setValueIsDefault(false);
+        dObject.updPropertyByName("accuracy").setValueIsDefault(false);
+        dObject.updPropertyByName("diff_min_change").setValueIsDefault(false);
+        dObject.updPropertyByName("optimality_tolerance").setValueIsDefault(false);
+        dObject.updPropertyByName("function_tolerance").setValueIsDefault(false);
+        dObject.updPropertyByName("step_tolerance").setValueIsDefault(false);
+        dObject.updPropertyByName("max_function_evaluations").setValueIsDefault(false);
+
+    }
+    // return either 1 past max of index property or 1 if list is empty
+    private int getNexTaskIndex(PropertyObjectList currentTasks) {
+        int retValue = 1;
+        for(int ti=0; ti < currentTasks.size(); ti++){
+            OpenSimObject nextTask = currentTasks.getValue(ti);
+            int nextTaskIndex = PropertyHelper.getValueInt(nextTask.getPropertyByName("index"));
+            retValue = Math.max(nextTaskIndex+1, retValue);
+        }
+        return retValue;
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton addJointTaskButton;

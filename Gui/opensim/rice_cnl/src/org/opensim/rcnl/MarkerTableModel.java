@@ -17,31 +17,31 @@ import org.opensim.modeling.PropertyStringList;
  *
  * @author Ayman-NMBL
  */
-public class CoordinateTableModel  extends AbstractTableModel{
+public class MarkerTableModel  extends AbstractTableModel{
 
-    PropertyStringList coordinateListProperty;
+    PropertyStringList markerListProperty;
     Model model;
-    String[] tableColumnNames= {"Coordiates", "Selected"};
-    ArrayStr coordinateNames = new ArrayStr();
+    String[] tableColumnNames= {"Markers", "Selected"};
+    ArrayStr markerNames = new ArrayStr();
     ArrayBool selected = new ArrayBool();
     String[] availableQuantities;
     Vector<Integer> shownQuantities=new Vector<Integer>(50);
        
-    public CoordinateTableModel(PropertyStringList coordinateListProperty, Model mdl){
-        this.coordinateListProperty = coordinateListProperty;
+    public MarkerTableModel(PropertyStringList markerListProperty, Model mdl){
+        this.markerListProperty = markerListProperty;
         this.model = mdl;
-        model.getCoordinateSet().getNames(coordinateNames);
-        for (int i=0; i < coordinateNames.getSize(); i++){
-            setValueAt(coordinateNames.get(i), i, 0);
+        model.getMarkerSet().getNames(markerNames);
+        for (int i=0; i < markerNames.getSize(); i++){
+            setValueAt(markerNames.get(i), i, 0);
             setValueAt(Boolean.FALSE, i, 0);
             selected.append(Boolean.FALSE);
         }
-        availableQuantities = new String[coordinateNames.getSize()];
-        coordinateNames.toVector().copyInto(availableQuantities);
+        availableQuantities = new String[markerNames.getSize()];
+        markerNames.toVector().copyInto(availableQuantities);
         showAll();
         // Now select entries based on passed in coordinateListProperty
-        for (int p=0; p < coordinateListProperty.size(); p++){
-            int cIndex = model.getCoordinateSet().getIndex(coordinateListProperty.getValue(p));
+        for (int p=0; p < markerListProperty.size(); p++){
+            int cIndex = model.getMarkerSet().getIndex(markerListProperty.getValue(p));
             setValueAt(Boolean.TRUE, cIndex, 1);
             selected.set(cIndex, true);
         }
@@ -96,12 +96,12 @@ public class CoordinateTableModel  extends AbstractTableModel{
         return (column==0)? String.class: Boolean.class;
     }
     // Translate checkboxes in selected array into coordinateListProperty
-    public void populateCoordinateListProperty() {
-        coordinateListProperty.clear();
+    public void populateMarkerListProperty() {
+        markerListProperty.clear();
         // Now select entries based on passed in coordinateListProperty
         for (int p=0; p < selected.getSize(); p++){
             if (selected.get(p))
-               coordinateListProperty.appendValue(coordinateNames.get(p));
+               markerListProperty.appendValue(markerNames.get(p));
         }
     }
     

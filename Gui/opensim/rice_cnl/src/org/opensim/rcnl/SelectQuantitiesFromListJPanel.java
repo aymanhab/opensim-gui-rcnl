@@ -5,22 +5,42 @@
  */
 package org.opensim.rcnl;
 
+import java.util.ArrayList;
+import javax.swing.JCheckBox;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.event.TableModelListener;
 import javax.swing.table.AbstractTableModel;
 
 /**
  *
  * @author Ayman-NMBL
  */
-public class SelectQuantitiesFromListJPanel extends javax.swing.JPanel {
+public class SelectQuantitiesFromListJPanel extends javax.swing.JPanel implements
+        DocumentListener {
+
     AbstractTableModel tableModel;
+    ArrayList<String> metaCharacters = new ArrayList<String>();
+    private String pattern = "";
+
     /**
      * Creates new form SelectCoordinatesJPanel
      */
     public SelectQuantitiesFromListJPanel(AbstractTableModel aTableModel) {
         tableModel = aTableModel;
         initComponents();
+
+        metaCharacters.add("*");
+        metaCharacters.add("+");
+        metaCharacters.add("?");
+        FilterTextField.getDocument().addDocumentListener(this);
+        FilterTextField.setText(getPattern());
     }
 
+    public String getPattern() {
+        return pattern;
+
+    }
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -30,35 +50,163 @@ public class SelectQuantitiesFromListJPanel extends javax.swing.JPanel {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        jPanel = new javax.swing.JPanel();
+        jLabel1 = new javax.swing.JLabel();
+        FilterTextField = new javax.swing.JFormattedTextField();
         jScrollPane1 = new javax.swing.JScrollPane();
         jTable1 = new javax.swing.JTable();
+
+        jSelectAllCheckBox = new javax.swing.JCheckBox();
+
+        org.openide.awt.Mnemonics.setLocalizedText(jLabel1, org.openide.util.NbBundle.getMessage(SelectQuantitiesFromListJPanel.class, "SelectQuantitiesFromListJPanel.jLabel1.text")); // NOI18N
+
+        FilterTextField.setToolTipText(org.openide.util.NbBundle.getMessage(SelectQuantitiesFromListJPanel.class, "SelectQuantitiesFromListJPanel.FilterTextField.toolTipText")); // NOI18N
 
         jTable1.setModel(tableModel);
         jTable1.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_LAST_COLUMN);
         jScrollPane1.setViewportView(jTable1);
 
+        javax.swing.GroupLayout jPanelLayout = new javax.swing.GroupLayout(jPanel);
+        jPanel.setLayout(jPanelLayout);
+        jPanelLayout.setHorizontalGroup(
+            jPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelLayout.createSequentialGroup()
+                .addComponent(jLabel1)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(FilterTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 388, Short.MAX_VALUE))
+            .addGroup(jPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 504, Short.MAX_VALUE))
+        );
+        jPanelLayout.setVerticalGroup(
+            jPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelLayout.createSequentialGroup()
+                .addGroup(jPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel1)
+                    .addComponent(FilterTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(433, 433, 433))
+            .addGroup(jPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelLayout.createSequentialGroup()
+                    .addGap(0, 52, Short.MAX_VALUE)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 420, javax.swing.GroupLayout.PREFERRED_SIZE)))
+        );
+
+        org.openide.awt.Mnemonics.setLocalizedText(jSelectAllCheckBox, org.openide.util.NbBundle.getMessage(SelectQuantitiesFromListJPanel.class, "SelectQuantitiesFromListJPanel.jSelectAllCheckBox.text")); // NOI18N
+        jSelectAllCheckBox.setToolTipText(org.openide.util.NbBundle.getMessage(SelectQuantitiesFromListJPanel.class, "SelectQuantitiesFromListJPanel.jSelectAllCheckBox.toolTipText")); // NOI18N
+        jSelectAllCheckBox.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 0));
+        jSelectAllCheckBox.setMargin(new java.awt.Insets(0, 0, 0, 0));
+        jSelectAllCheckBox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jSelectAllCheckBoxActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 336, Short.MAX_VALUE)
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(layout.createSequentialGroup()
-                    .addContainerGap()
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 316, Short.MAX_VALUE)
-                    .addContainerGap()))
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
+            .addGroup(layout.createSequentialGroup()
+                .addGap(9, 9, 9)
+                .addComponent(jSelectAllCheckBox)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 300, Short.MAX_VALUE)
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 300, Short.MAX_VALUE))
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jSelectAllCheckBox)
+                .addGap(12, 12, 12))
         );
     }// </editor-fold>//GEN-END:initComponents
 
+    private void jSelectAllCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jSelectAllCheckBoxActionPerformed
+//        tableModel.selectShown(true);
+//        updateSelected();
+        ((JCheckBox)evt.getSource()).setSelected(false);
+        if (tableModel instanceof MuscleGroupTableModel)
+           ((MuscleGroupTableModel) tableModel).selectShown();
+        else if (tableModel instanceof CoordinateTableModel)
+           ((CoordinateTableModel) tableModel).selectShown();
+        else if (tableModel instanceof ComponentTableModel)
+           ((ComponentTableModel) tableModel).selectShown();
+        else if (tableModel instanceof MarkerTableModel)
+           ((MarkerTableModel) tableModel).selectShown();
+
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jSelectAllCheckBoxActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JFormattedTextField FilterTextField;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JPanel jPanel;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JCheckBox jSelectAllCheckBox;
     private javax.swing.JTable jTable1;
     // End of variables declaration//GEN-END:variables
+
+    @Override
+    public void insertUpdate(DocumentEvent de) {
+        handlePatternChange();
+    }
+
+    @Override
+    public void removeUpdate(DocumentEvent de) {
+        handlePatternChange();
+    }
+
+    @Override
+    public void changedUpdate(DocumentEvent de) {
+       handlePatternChange();
+    }
+    
+        /**
+     * Handle changes to the text in the FilterTextField
+     * a leading and a trailing .* are pre/appended for matching any substring
+     */
+    private void handlePatternChange()
+    {
+       String rawPattern = FilterTextField.getText();
+       // Remove leading and trailing special characters that may interfere
+       if (rawPattern.length()>0){
+          // remove leading and trailing special characters
+          int index=0;
+          String newPattern=rawPattern;
+          while(index < rawPattern.length()){
+            String letter=rawPattern.substring(index, index+1);
+            if (metaCharacters.contains(letter))
+               newPattern=rawPattern.substring(index);
+            else
+               break;
+            index++;
+          }
+          rawPattern=newPattern;
+          // start from the end and repeat
+          index = rawPattern.length()-1;
+           while(index >= 0){
+            String letter=rawPattern.substring(index, index+1);
+            if (metaCharacters.contains(letter))
+               newPattern=rawPattern.substring(0, index);
+            else
+               break;
+            index--;
+          }
+          rawPattern=newPattern;
+      }
+       
+       if (tableModel instanceof MuscleGroupTableModel)
+           ((MuscleGroupTableModel) tableModel).restrictNamesBy(".*"+rawPattern+".*");
+       else if (tableModel instanceof CoordinateTableModel)
+           ((CoordinateTableModel) tableModel).restrictNamesBy(".*"+rawPattern+".*");
+       else if (tableModel instanceof ComponentTableModel)
+           ((ComponentTableModel) tableModel).restrictNamesBy(".*"+rawPattern+".*");
+       else if (tableModel instanceof MarkerTableModel)
+           ((MarkerTableModel) tableModel).restrictNamesBy(".*"+rawPattern+".*");
+       //System.out.println("restrict by"+".*"+rawPattern+".*");
+    }  
 }

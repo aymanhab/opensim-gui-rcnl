@@ -5,8 +5,6 @@
  */
 package org.opensim.rcnl;
 
-import java.awt.event.ActionEvent;
-import java.io.File;
 import javax.swing.JComponent;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
@@ -16,19 +14,18 @@ import org.openide.awt.ActionRegistration;
 import org.openide.awt.DynamicMenuContent;
 import org.openide.util.HelpCtx;
 import org.openide.util.NbBundle;
-import org.openide.util.NbBundle.Messages;
 import org.openide.util.actions.CallableSystemAction;
 
 @ActionID(
         category = "Edit",
-        id = "org.opensim.rcnl.ModelPersonalizationAction"
+        id = "org.opensim.rcnl.TreatmentOptimizationAction"
 )
 @ActionRegistration(
-        displayName = "#CTL_ModelPersonalizationAction"
+        displayName = "#CTL_TreatmentOptimizationAction"
 )
 @ActionReference(path = "Menu/Tools", position = 1600)
 //@Messages("CTL_ModelPersonalizationAction=Model Personalization Tool")
-public final class ModelPersonalizationAction extends CallableSystemAction {
+public final class TreatmentOptimizationAction extends CallableSystemAction {
 
     public void performAction() {
         // TODO implement action body
@@ -40,7 +37,7 @@ public final class ModelPersonalizationAction extends CallableSystemAction {
     }
     /** {@inheritDoc} */
     public String getName() {
-        return NbBundle.getMessage(ModelPersonalizationAction.class, "CTL_ModelPersonalizationAction");
+        return NbBundle.getMessage(TreatmentOptimizationAction.class, "CTL_TreatmentOptimizationAction");
     }
     /** {@inheritDoc} */
     public HelpCtx getHelpCtx() {
@@ -66,20 +63,15 @@ public final class ModelPersonalizationAction extends CallableSystemAction {
         }
  
         private void updateMenu() {
-            javax.swing.JMenuItem jMPMenuItem = new JMenuItem("Joint Model Personalization...");
-            jMPMenuItem.addActionListener(new JointPersonalizationAction());
-            this.add(jMPMenuItem);
-            javax.swing.JMenuItem mTPMenuItem = new JMenuItem("Muscle-tendon Personalization...");
-            mTPMenuItem.addActionListener(new MTPPersonalizationAction());
-            this.add(mTPMenuItem);
-            javax.swing.JMenuItem nCPMenuItem = new JMenuItem("Neural Control Personalization...");
-            nCPMenuItem.addActionListener(new NeuralControlPersonalizationAction());
-            this.add(nCPMenuItem);
-            javax.swing.JMenuItem gCPMenuItem = new JMenuItem("Ground Contact Personalization...");
-            gCPMenuItem.addActionListener(new GroundContactPersonalizationAction());
-            this.add(gCPMenuItem);
-            
-            
+            javax.swing.JMenuItem tOptMenuItem = new JMenuItem("Tracking Optimization...");
+            tOptMenuItem.addActionListener(new TrackingOptimizationAction());
+            this.add(tOptMenuItem);
+            javax.swing.JMenuItem vOptMenuItem = new JMenuItem("Verification Optimization...");
+            vOptMenuItem.addActionListener(new VerificationOptimizationAction());
+            this.add(vOptMenuItem);
+            javax.swing.JMenuItem desOptMenuItem = new JMenuItem("Design Optimization...");
+            desOptMenuItem.addActionListener(new DesignOptimizationAction());
+            this.add(desOptMenuItem);
         }
     }
 }

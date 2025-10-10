@@ -5,6 +5,7 @@
  */
 package org.opensim.rcnl;
 
+import java.util.Arrays;
 import java.util.Vector;
 import java.util.regex.Pattern;
 import javax.swing.table.AbstractTableModel;
@@ -17,31 +18,31 @@ import org.opensim.modeling.PropertyStringList;
  *
  * @author Ayman-NMBL
  */
-public class CoordinateTableModel  extends AbstractTableModel{
+public class ComponentTableModel  extends AbstractTableModel{
 
-    PropertyStringList coordinateListProperty;
+    PropertyStringList componentListProperty;
     Model model;
-    String[] tableColumnNames= {"Coordiates", "Selected"};
-    ArrayStr coordinateNames = new ArrayStr();
+    String[] tableColumnNames= {"Components", "Selected"};
+    ArrayStr componentNames = new ArrayStr();
     ArrayBool selected = new ArrayBool();
     String[] availableQuantities;
     Vector<Integer> shownQuantities=new Vector<Integer>(50);
        
-    public CoordinateTableModel(PropertyStringList coordinateListProperty, Model mdl){
-        this.coordinateListProperty = coordinateListProperty;
-        this.model = mdl;
-        model.getCoordinateSet().getNames(coordinateNames);
-        for (int i=0; i < coordinateNames.getSize(); i++){
-            setValueAt(coordinateNames.get(i), i, 0);
+    public ComponentTableModel(PropertyStringList componentListProperty, String[] available){
+        this.componentListProperty = componentListProperty;
+        this.availableQuantities = available;
+        
+        for (int i=0; i < availableQuantities.length; i++){
+            setValueAt(availableQuantities[i], i, 0);
             setValueAt(Boolean.FALSE, i, 0);
             selected.append(Boolean.FALSE);
+            componentNames.append(availableQuantities[i]);
         }
-        availableQuantities = new String[coordinateNames.getSize()];
-        coordinateNames.toVector().copyInto(availableQuantities);
         showAll();
-        // Now select entries based on passed in coordinateListProperty
-        for (int p=0; p < coordinateListProperty.size(); p++){
-            int cIndex = model.getCoordinateSet().getIndex(coordinateListProperty.getValue(p));
+        
+        // Now select entries based on passed in componentListProperty
+        for (int p=0; p < componentListProperty.size(); p++){
+            int cIndex = Arrays.asList(availableQuantities).indexOf(componentListProperty.getValue(p));
             setValueAt(Boolean.TRUE, cIndex, 1);
             selected.set(cIndex, true);
         }
@@ -95,13 +96,13 @@ public class CoordinateTableModel  extends AbstractTableModel{
     public Class getColumnClass(int column) {
         return (column==0)? String.class: Boolean.class;
     }
-    // Translate checkboxes in selected array into coordinateListProperty
-    public void populateCoordinateListProperty() {
-        coordinateListProperty.clear();
-        // Now select entries based on passed in coordinateListProperty
+    // Translate checkboxes in selected array into componentListProperty
+    public void populateListProperty() {
+        componentListProperty.clear();
+        // Now select entries based on passed in componentListProperty
         for (int p=0; p < selected.getSize(); p++){
             if (selected.get(p))
-               coordinateListProperty.appendValue(coordinateNames.get(p));
+               componentListProperty.appendValue(componentNames.get(p));
         }
     }
     

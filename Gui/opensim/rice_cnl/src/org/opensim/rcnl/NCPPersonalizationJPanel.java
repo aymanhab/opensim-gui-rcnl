@@ -571,7 +571,7 @@ public class NCPPersonalizationJPanel extends BaseToolPanel  implements Observer
 
     @Override
     public void loadSettings(String nmsmFilename) {
-        String fileName = super.stripOuterTags(nmsmFilename);
+        String fileName = BaseToolPanel.stripOuterTags(nmsmFilename);
         Model model = OpenSimDB.getInstance().getCurrentModel();
        //if(model==null) throw new IOException("JointPersonalizationJPanel got null model");
        ncpPersonalizationToolModel = new NCPPersonalizationToolModel(model, fileName);
@@ -633,8 +633,45 @@ public class NCPPersonalizationJPanel extends BaseToolPanel  implements Observer
     // End of variables declaration//GEN-END:variables
 
     @Override
-    String getToolXML() {
-        return ncpPersonalizationToolModel.getToolAsObject().dump();
+    public void saveSettings(String fileName) {
+        String fullFilename = FileUtils.addExtensionIfNeeded(fileName, ".xml");
+        OpenSimObject obj = ncpPersonalizationToolModel.getToolAsObject();
+        forceWritableProperties(obj);
+        obj.print(fullFilename);
+        replaceOpenSimDocumentTags(fullFilename);
+    }
+
+    @Override
+    void forceWritableProperties(OpenSimObject dObject) {
+        super.forceWritableProperties(dObject); //To change body of generated methods, choose Tools | Templates.
+        dObject.updPropertyByName("results_directory").setValueIsDefault(false);
+        dObject.updPropertyByName("input_model_file").setValueIsDefault(false);
+        dObject.updPropertyByName("input_osimx_file").setValueIsDefault(false);
+        dObject.updPropertyByName("data_directory").setValueIsDefault(false);
+        dObject.updPropertyByName("coordinate_list").setValueIsDefault(false);
+
+        dObject.updPropertyByName("v_max_factor").setValueIsDefault(false);
+        dObject.updPropertyByName("activation_muscle_groups").setValueIsDefault(false);
+        dObject.updPropertyByName("normalized_fiber_length_muscle_groups").setValueIsDefault(false);
+        dObject.updPropertyByName("trial_prefixes").setValueIsDefault(false);
+        dObject.updPropertyByName("diff_min_change").setValueIsDefault(false);
+        dObject.updPropertyByName("step_tolerance").setValueIsDefault(false);
+        dObject.updPropertyByName("optimality_tolerance").setValueIsDefault(false);
+        dObject.updPropertyByName("function_tolerance").setValueIsDefault(false);
+        dObject.updPropertyByName("max_iterations").setValueIsDefault(false);
+        dObject.updPropertyByName("max_function_evaluations").setValueIsDefault(false);
+        dObject.updPropertyByName("enforce_bilateral_symmetry").setValueIsDefault(false);
+
+        AbstractProperty ncpMuscleTendonLengthInitialization = dObject.getPropertyByName("MuscleTendonLengthInitialization");
+        ncpMuscleTendonLengthInitialization.setValueIsDefault(false);
+        OpenSimObject ncpMtliProperties = PropertyObjectList.getAs(ncpMuscleTendonLengthInitialization).getValue(0);
+        ncpMtliProperties.updPropertyByName("is_enabled").setValueIsDefault(false);
+        ncpMtliProperties.updPropertyByName("max_normalized_muscle_fiber_length").setValueIsDefault(false);
+        ncpMtliProperties.updPropertyByName("min_normalized_muscle_fiber_length").setValueIsDefault(false);
+        ncpMtliProperties.updPropertyByName("optimize_maximum_muscle_stress").setValueIsDefault(false);
+        ncpMtliProperties.updPropertyByName("optimize_isometric_max_force").setValueIsDefault(false);
+        ncpMtliProperties.updPropertyByName("maximum_muscle_stress").setValueIsDefault(false);
+        
     }
 
 }
