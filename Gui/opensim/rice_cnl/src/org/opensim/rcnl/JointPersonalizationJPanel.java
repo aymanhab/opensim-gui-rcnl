@@ -28,6 +28,7 @@ import org.opensim.modeling.PropertyHelper;
 import org.opensim.modeling.PropertyObjectList;
 import org.opensim.utils.FileUtils;
 import org.opensim.view.pub.OpenSimDB;
+import org.opensim.utils.BrowserLauncher;
 
 /**
  *
@@ -355,6 +356,11 @@ public class JointPersonalizationJPanel extends BaseToolPanel  implements Observ
     }
 
     @Override
+    public void goToHelpURL() {
+        BrowserLauncher.openURL("https://nmsm.rice.edu/model-personalization/joint-model-personalization/");
+    }
+
+    @Override
     public void setSettingsFileDescription(String description) {
         super.setSettingsFileDescription(description); //To change body of generated methods, choose Tools | Templates.
     }
@@ -427,6 +433,7 @@ public class JointPersonalizationJPanel extends BaseToolPanel  implements Observ
     private org.opensim.swingui.FileTextFieldAndChooser outputModelFilePath;
     private javax.swing.JPanel outputPanel;
     private javax.swing.JPanel tasksPanel;
+    
     // End of variables declaration//GEN-END:variables
 
     private class ListSelectionHandler implements ListSelectionListener {

@@ -27,6 +27,7 @@ import org.opensim.modeling.OpenSimObject;
 import org.opensim.modeling.PropertyObjectList;
 import org.opensim.utils.FileUtils;
 import org.opensim.view.pub.OpenSimDB;
+import org.opensim.utils.BrowserLauncher;
 
 /**
  *
@@ -606,6 +607,11 @@ public class NCPPersonalizationJPanel extends BaseToolPanel  implements Observer
         setSettingsFileDescription("Save Neural Control Personalization Settings file (xml)");
         jCheckBoxMTPInitialization.setSelected(ncpPersonalizationToolModel.getEnableInitialization());
         jSynergySetTextArea.setText(ncpPersonalizationToolModel.getSynergiesAsString());
+    }
+
+    @Override
+    public void goToHelpURL() {
+        BrowserLauncher.openURL("https://nmsm.rice.edu/model-personalization/neural-control-personalization/");
     }
 
     @Override
