@@ -43,7 +43,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.net.URL;
+import java.net.URI;
 import java.util.Observer;
 import javax.swing.AbstractAction;
 import javax.swing.JButton;
@@ -59,18 +59,21 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import java.net.URL;
 import org.openide.DialogDescriptor;
 import org.openide.DialogDisplayer;
 import org.openide.util.Exceptions;
 import org.opensim.modeling.OpenSimObject;
 import org.opensim.utils.FileUtils;
 import org.opensim.view.pub.OpenSimDB;
+import org.opensim.utils.BrowserLauncher;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+
 
 public abstract class BaseToolPanel extends JPanel implements ActionListener, Observer {
 
@@ -142,7 +145,7 @@ public abstract class BaseToolPanel extends JPanel implements ActionListener, Ob
             for (int i = 0; i < nodeList.getLength(); i++) {
                 Node oldNode = nodeList.item(i);
                 Element element = (Element) oldNode; 
-                if (element != null) { element.setAttribute("Version", "1.5.0"); }
+                if (element != null) { element.setAttribute("Version", "1.5.2"); }
                 doc.renameNode(oldNode, oldNode.getNamespaceURI(), "NMSMPipelineDocument");
             }
             TransformerFactory transformerFactory = TransformerFactory.newInstance();
@@ -199,10 +202,29 @@ public abstract class BaseToolPanel extends JPanel implements ActionListener, Ob
         }
     }
 
+    class HelpAction extends AbstractAction {
+
+        public HelpAction() {
+            super("Help");
+        }
+
+        public void actionPerformed(ActionEvent evt) {
+            goToHelpURL();
+        }
+    }
+
+    // helpButton.addActionListener(new ActionListener() {
+    //   public void actionPerformed(ActionEvent ae) {
+    //       String path = "https://simtk-confluence.stanford.edu/display/OpenSim40/" + helpUrl;
+    //       BrowserLauncher.openURL(path);
+    //   }
+    //   });
+
     public BaseToolPanel() {
 
         loadSettingsButton.addActionListener(new LoadSettingsAction());
         saveSettingsButton.addActionListener(new SaveSettingsAction());
+        helpButton.addActionListener(new HelpAction());
         applyButton.setEnabled(false);
         OpenSimDB.getInstance().addObserver(this);
     }
@@ -219,6 +241,8 @@ public abstract class BaseToolPanel extends JPanel implements ActionListener, Ob
     }
 
     abstract void saveSettings(String fileName) ;
+
+    abstract void goToHelpURL();
 
     public void pressedCancel() {
     }

@@ -10,6 +10,8 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Vector;
@@ -26,6 +28,7 @@ import org.opensim.modeling.PropertyHelper;
 import org.opensim.modeling.PropertyObjectList;
 import org.opensim.utils.FileUtils;
 import org.opensim.view.pub.OpenSimDB;
+import org.opensim.utils.BrowserLauncher;
 
 /**
  *
@@ -309,29 +312,78 @@ public class JointPersonalizationJPanel extends BaseToolPanel  implements Observ
 
     @Override
     public void saveSettings(String fileName) {
+        
+        String settingsFilePath = Paths.get(fileName).getParent().toString();
+
+        String outputModelFileName = jointPersonalizationToolModel.getOutputModelFile();
+        Path outputModelFileNamePath = Paths.get(outputModelFileName);
+        String relativeOutputModelFileName = FileUtils.makePathRelative(outputModelFileName, settingsFilePath);
+        if (relativeOutputModelFileName != null && outputModelFileNamePath != null && outputModelFileNamePath.isAbsolute()){
+            jointPersonalizationToolModel.setOutputModelFile(relativeOutputModelFileName);
+        }
+        
+        PropertyObjectList taskList = jointPersonalizationToolModel.getJointTaskListAsObjectList();
+        for (int i=0; i<taskList.size(); i++){
+            OpenSimObject task = taskList.getValue(i);
+            AbstractProperty markerFileProperty = task.getPropertyByName("marker_file_name");
+            String markerFileName = markerFileProperty.toString();
+            Path markerFilePath = Paths.get(markerFileName);
+            String relativeMarkerFileName = FileUtils.makePathRelative(markerFileName, settingsFilePath);
+            if (relativeMarkerFileName != null && markerFilePath != null && markerFilePath.isAbsolute()){
+                PropertyHelper.setValueString(relativeMarkerFileName, markerFileProperty);
+            }
+        }
+
         String fullFilename = FileUtils.addExtensionIfNeeded(fileName, ".xml");
         OpenSimObject obj = jointPersonalizationToolModel.getToolAsObject();
         forceWritableProperties(obj);
         obj.print(fullFilename);
         replaceOpenSimDocumentTags(fullFilename);
+        
+        jointPersonalizationToolModel.setOutputModelFile(outputModelFileName);
+        
+        for (int i=0; i<taskList.size(); i++){
+            OpenSimObject task = taskList.getValue(i);
+            AbstractProperty markerFileProperty = task.getPropertyByName("marker_file_name");
+            String markerFileName = markerFileProperty.toString();
+            String absoluteMarkerFileName = FileUtils.makePathAbsolute(markerFileName, settingsFilePath);
+            PropertyHelper.setValueString(absoluteMarkerFileName, markerFileProperty);
+        }
     }
 
     @Override
     public void loadSettings(String nmsmFilename) {
         String fileName = BaseToolPanel.stripOuterTags(nmsmFilename);
+        String settingsFilePath = Paths.get(fileName).getParent().toString();
         Model model = OpenSimDB.getInstance().getCurrentModel();
-       //if(model==null) throw new IOException("JointPersonalizationJPanel got null model");
-       jointPersonalizationToolModel = new JointPersonalizationToolModel(model, fileName);
-       File f= new File(fileName); 
-       f.delete();
-       jointPersonalizationTaskListModel = new JMPTaskListModel(jointPersonalizationToolModel.getJointTaskListAsObjectList());
-       listSelectionModel = jJointPersonalizationList.getSelectionModel();
-       listSelectionModel.addListSelectionListener( new ListSelectionHandler());
-       //initComponents(); Panel already constructed, no need to re-initComponents
-       jJointPersonalizationList.setModel(jointPersonalizationTaskListModel);
-       currentModelFileTextField.setText(jointPersonalizationToolModel.getInputModelFile());
-       outputModelFilePath.setFileName(jointPersonalizationToolModel.getOutputModelFile());
-       setSettingsFileDescription("Save Joint Personalization Settings file (xml)");
+        //if(model==null) throw new IOException("JointPersonalizationJPanel got null model");
+        jointPersonalizationToolModel = new JointPersonalizationToolModel(model, fileName);
+
+        String outputModelFile = jointPersonalizationToolModel.getOutputModelFile();
+        String absoluteOutputModelFile = FileUtils.makePathAbsolute(outputModelFile, settingsFilePath);
+        outputModelFilePath.setFileName(absoluteOutputModelFile);
+        
+
+        PropertyObjectList taskList = jointPersonalizationToolModel.getJointTaskListAsObjectList();
+        for (int i=0; i<taskList.size(); i++){
+            OpenSimObject task = taskList.getValue(i);
+            AbstractProperty markerFileProperty = task.getPropertyByName("marker_file_name");
+            String markerFileName = markerFileProperty.toString();
+            String absoluteMarkerFileName = FileUtils.makePathAbsolute(markerFileName, settingsFilePath);
+            PropertyHelper.setValueString(absoluteMarkerFileName, markerFileProperty);
+        }
+
+
+        File f= new File(fileName); 
+        f.delete();
+        jointPersonalizationTaskListModel = new JMPTaskListModel(jointPersonalizationToolModel.getJointTaskListAsObjectList());
+        listSelectionModel = jJointPersonalizationList.getSelectionModel();
+        listSelectionModel.addListSelectionListener( new ListSelectionHandler());
+        
+        //initComponents(); Panel already constructed, no need to re-initComponents
+        jJointPersonalizationList.setModel(jointPersonalizationTaskListModel);
+        currentModelFileTextField.setText(jointPersonalizationToolModel.getInputModelFile());
+        setSettingsFileDescription("Save Joint Personalization Settings file (xml)");
     }
 
     @Override
@@ -356,7 +408,7 @@ public class JointPersonalizationJPanel extends BaseToolPanel  implements Observ
             ithTask.updPropertyByName("marker_file_name").setValueIsDefault(false);
             ithTask.updPropertyByName("time_range").setValueIsDefault(false);
             PropertyObjectList poJointList = PropertyObjectList.updAs(apJnts);
-             for (int j=0; j<poJointList.size(); j++){
+            for (int j=0; j<poJointList.size(); j++){
                 poJointList.getValue(j).updPropertyByName("parent_frame_transformation").setValueIsDefault(false);
                 AbstractProperty ParentFrameTransformation = poJointList.getValue(j).getPropertyByName("parent_frame_transformation");
                 OpenSimObject ParentFrameTransformationObject = PropertyObjectList.getAs(ParentFrameTransformation).getValue(0);
@@ -393,6 +445,11 @@ public class JointPersonalizationJPanel extends BaseToolPanel  implements Observ
         return retValue;
     }
 
+    @Override
+    public void goToHelpURL() {
+        BrowserLauncher.openURL("https://nmsm.rice.edu/guides-and-publications/tool-overviews/model-personalization/joint-model-personalization/");
+    }
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton addJointTaskButton;
     private javax.swing.JTextField currentModelFileTextField;
@@ -407,6 +464,7 @@ public class JointPersonalizationJPanel extends BaseToolPanel  implements Observ
     private org.opensim.swingui.FileTextFieldAndChooser outputModelFilePath;
     private javax.swing.JPanel outputPanel;
     private javax.swing.JPanel tasksPanel;
+    
     // End of variables declaration//GEN-END:variables
 
     private class ListSelectionHandler implements ListSelectionListener {

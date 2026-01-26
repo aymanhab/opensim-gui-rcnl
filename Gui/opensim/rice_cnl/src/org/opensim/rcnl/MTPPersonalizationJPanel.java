@@ -9,6 +9,8 @@ import java.awt.Dialog;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Vector;
@@ -24,6 +26,7 @@ import org.opensim.modeling.OpenSimObject;
 import org.opensim.modeling.PropertyObjectList;
 import org.opensim.utils.FileUtils;
 import org.opensim.view.pub.OpenSimDB;
+import org.opensim.utils.BrowserLauncher;
 
 /**
  *
@@ -634,22 +637,42 @@ public class MTPPersonalizationJPanel extends BaseToolPanel  implements Observer
     @Override
     public void loadSettings(String nmsmFilename) {
         String fileName = BaseToolPanel.stripOuterTags(nmsmFilename);
+        String settingsFilePath = Paths.get(fileName).getParent().toString();
         Model model = OpenSimDB.getInstance().getCurrentModel();
-       //if(model==null) throw new IOException("JointPersonalizationJPanel got null model");
-       mtpPersonalizationToolModel = new MTPPersonalizationToolModel(model, fileName);
-       osimxFilePath.setFileName(mtpPersonalizationToolModel.getInputOsimxFile());
-       dataDirPath.setFileName(mtpPersonalizationToolModel.getDataDir());
-       outputResultDirPath.setFileName(mtpPersonalizationToolModel.getOutputResultDir());
-       jCoordinateListTextArea.setText(mtpPersonalizationToolModel.getPropCoordinateListString().toString());
-       jActivationMGTextArea.setText(mtpPersonalizationToolModel.getPropActivationMGListString().toString());
-       jNormalizedFLMGTextArea.setText(mtpPersonalizationToolModel.getPropNormalizedFLMGListString().toString());
-       jMissingEMGTextArea.setText(mtpPersonalizationToolModel.getPropMissingEMGMGListString().toString());
-       jCollectedEMGTextArea.setText(mtpPersonalizationToolModel.getPropCollectedEMGMGListString().toString());
-       passiveDataInputDir.setFileName(mtpPersonalizationToolModel.getPassiveDataDir());
-       setSettingsFileDescription("Save Muscle Tendon Personalization Settings file (xml)");
-       jCheckBoxMTPInitialization.setSelected(mtpPersonalizationToolModel.getEnableInitialization());
-       jCheckBoxSynergyExrapolate.setSelected(mtpPersonalizationToolModel.getEnableSynergies());
-       jSpinnerSunergyCount.setValue(mtpPersonalizationToolModel.getNumSynergies());
+        mtpPersonalizationToolModel = new MTPPersonalizationToolModel(model, fileName);
+
+        String resultsDirectory = mtpPersonalizationToolModel.getOutputResultDir();
+        String absoluteResultsDirectory = FileUtils.makePathAbsolute(resultsDirectory, settingsFilePath);
+        outputResultDirPath.setFileName(absoluteResultsDirectory);
+
+        String inputOsimxFile = mtpPersonalizationToolModel.getInputOsimxFile();
+        String absoluteInputOsimxFile = FileUtils.makePathAbsolute(inputOsimxFile, settingsFilePath);
+        osimxFilePath.setFileName(absoluteInputOsimxFile);
+
+        String inputDataDirectory = mtpPersonalizationToolModel.getDataDir();
+        String absoluteInputDataDirectory = FileUtils.makePathAbsolute(inputDataDirectory, settingsFilePath);
+        dataDirPath.setFileName(absoluteInputDataDirectory);
+
+        String passiveDataDirectory = mtpPersonalizationToolModel.getPassiveDataDir();
+        String absolutePassiveDataDirectory = FileUtils.makePathAbsolute(passiveDataDirectory, settingsFilePath);
+        passiveDataInputDir.setFileName(absolutePassiveDataDirectory);
+        
+        //if(model==null) throw new IOException("JointPersonalizationJPanel got null model");
+        
+        jCoordinateListTextArea.setText(mtpPersonalizationToolModel.getPropCoordinateListString().toString());
+        jActivationMGTextArea.setText(mtpPersonalizationToolModel.getPropActivationMGListString().toString());
+        jNormalizedFLMGTextArea.setText(mtpPersonalizationToolModel.getPropNormalizedFLMGListString().toString());
+        jMissingEMGTextArea.setText(mtpPersonalizationToolModel.getPropMissingEMGMGListString().toString());
+        jCollectedEMGTextArea.setText(mtpPersonalizationToolModel.getPropCollectedEMGMGListString().toString());
+        setSettingsFileDescription("Save Muscle Tendon Personalization Settings file (xml)");
+        jCheckBoxMTPInitialization.setSelected(mtpPersonalizationToolModel.getEnableInitialization());
+        jCheckBoxSynergyExrapolate.setSelected(mtpPersonalizationToolModel.getEnableSynergies());
+        jSpinnerSunergyCount.setValue(mtpPersonalizationToolModel.getNumSynergies());
+    }
+
+    @Override
+    public void goToHelpURL() {
+        BrowserLauncher.openURL("https://nmsm.rice.edu/guides-and-publications/tool-overviews/model-personalization/muscle-tendon-personalization/");
     }
 
     @Override
@@ -702,11 +725,57 @@ public class MTPPersonalizationJPanel extends BaseToolPanel  implements Observer
 
     @Override
     public void saveSettings(String fileName) {
+        String settingsFilePath = Paths.get(fileName).getParent().toString();
+
+        String resultsDirectory = mtpPersonalizationToolModel.getOutputResultDir();
+        String inputOsimxFile = mtpPersonalizationToolModel.getInputOsimxFile();
+        String inputDataDirectory = mtpPersonalizationToolModel.getDataDir();
+        String passiveDataDirectory = mtpPersonalizationToolModel.getPassiveDataDir();
+        Model model = OpenSimDB.getInstance().getCurrentModel();
+        String inputModelFileName = model.getInputFileName();
+
+        // Make paths relative to settings file
+        Path resultsDirectoryPath = Paths.get(resultsDirectory);
+        String relativeResultsDir = FileUtils.makePathRelative(resultsDirectory, settingsFilePath);
+        if (relativeResultsDir != null && resultsDirectoryPath!=null && resultsDirectoryPath.isAbsolute()){
+            mtpPersonalizationToolModel.setOutputResultDir(relativeResultsDir);
+        }
+
+        Path inputOsimxFilePath = Paths.get(inputOsimxFile);
+        String relativeInputOsimxFile = FileUtils.makePathRelative(inputOsimxFile, settingsFilePath);
+        if (relativeInputOsimxFile != null && inputOsimxFilePath!=null && inputOsimxFilePath.isAbsolute()){
+            mtpPersonalizationToolModel.setInputOsimxFile(relativeInputOsimxFile);
+        }
+
+        Path inputDataDirectoryPath = Paths.get(inputDataDirectory);
+        String relativeInputDataDirectory = FileUtils.makePathRelative(inputDataDirectory, settingsFilePath);
+        if (relativeInputDataDirectory != null && inputDataDirectoryPath!=null && inputDataDirectoryPath.isAbsolute()){
+            mtpPersonalizationToolModel.setDataDir(relativeInputDataDirectory);
+        }
+
+        Path passiveDataDirectoryPath = Paths.get(passiveDataDirectory);
+        String relativePassiveDataDirectory = FileUtils.makePathRelative(passiveDataDirectory, settingsFilePath);
+        if (relativePassiveDataDirectory != null && passiveDataDirectoryPath!=null && passiveDataDirectoryPath.isAbsolute()){
+            mtpPersonalizationToolModel.setPassiveDataDir(relativePassiveDataDirectory);
+        }
+
+        Path inputModelFilePath = Paths.get(inputModelFileName);
+        String relativeInputModelFile = FileUtils.makePathRelative(inputModelFileName, settingsFilePath);
+        if (relativeInputModelFile != null && inputModelFilePath!=null && inputModelFilePath.isAbsolute()){
+            mtpPersonalizationToolModel.setInputModelFile(relativeInputModelFile);
+        }
+
         String fullFilename = FileUtils.addExtensionIfNeeded(fileName, ".xml");
         OpenSimObject obj = mtpPersonalizationToolModel.getToolAsObject();
         forceWritableProperties(obj);
         obj.print(fullFilename);
         replaceOpenSimDocumentTags(fullFilename);
+
+        mtpPersonalizationToolModel.setOutputResultDir(resultsDirectory);
+        mtpPersonalizationToolModel.setInputOsimxFile(inputOsimxFile);
+        mtpPersonalizationToolModel.setDataDir(inputDataDirectory);
+        mtpPersonalizationToolModel.setPassiveDataDir(passiveDataDirectory);
+        mtpPersonalizationToolModel.setInputModelFile(inputModelFileName);
     }
 
     @Override
