@@ -443,7 +443,7 @@ public class GCPPersonalizationJPanel extends BaseToolPanel  implements Observer
         String inputMotionFileName = gcpPersonalizationToolModel.getInputMotionFile();
         String inputGrfFileName = gcpPersonalizationToolModel.geInputGRFFile();
         String osimxFileName = gcpPersonalizationToolModel.getInputOsimxFile();
-        String inputModelFileName = gcpPersonalizationToolModel.getInputModelFile();
+        // String inputModelFileName = gcpPersonalizationToolModel.getInputModelFile();
         String resultsDirectory = gcpPersonalizationToolModel.getOutputResultDir();
 
         Path inputMotionAbsolutePath = Paths.get(inputMotionFileName).getParent();
