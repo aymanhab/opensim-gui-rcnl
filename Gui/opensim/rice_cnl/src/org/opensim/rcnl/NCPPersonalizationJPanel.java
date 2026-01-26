@@ -611,7 +611,7 @@ public class NCPPersonalizationJPanel extends BaseToolPanel  implements Observer
 
     @Override
     public void goToHelpURL() {
-        BrowserLauncher.openURL("https://nmsm.rice.edu/model-personalization/neural-control-personalization/");
+        BrowserLauncher.openURL("https://nmsm.rice.edu/guides-and-publications/tool-overviews/model-personalization/neural-control-personalization/");
     }
 
     @Override

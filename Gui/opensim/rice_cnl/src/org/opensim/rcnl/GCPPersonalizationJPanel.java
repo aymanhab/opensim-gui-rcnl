@@ -485,7 +485,7 @@ public class GCPPersonalizationJPanel extends BaseToolPanel  implements Observer
 
     @Override
     public void goToHelpURL() {
-        BrowserLauncher.openURL("https://nmsm.rice.edu/model-personalization/ground-contact-personalization/intro/");
+        BrowserLauncher.openURL("https://nmsm.rice.edu/guides-and-publications/tool-overviews/model-personalization/ground-contact-personalization/");
     }
 
 

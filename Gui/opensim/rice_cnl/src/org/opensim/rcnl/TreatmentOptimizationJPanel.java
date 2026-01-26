@@ -1224,7 +1224,7 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
 
    @Override
     public void goToHelpURL() {
-        BrowserLauncher.openURL("https://nmsm.rice.edu/treatment-optimization/");
+        BrowserLauncher.openURL("https://nmsm.rice.edu/guides-and-publications/tool-overviews/treatment-optimization/");
     }
 
     @Override
@@ -1255,12 +1255,17 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
         dObject.updPropertyByName("states_coordinate_list").setValueIsDefault(false);
         dObject.updPropertyByName("optimal_control_solver_settings_file").setValueIsDefault(false);
         dObject.updPropertyByName("optimal_control_solver_settings_file").setValueIsDefault(false);
+        dObject.getPropertyByName("load_surrogate_model").setValueIsDefault(false);
+        dObject.getPropertyByName("save_surrogate_model").setValueIsDefault(false);
 
         AbstractProperty synergyController = dObject.getPropertyByName("RCNLSynergyController");
         OpenSimObject synergyControllerProperties = PropertyObjectList.getAs(synergyController).getValue(0);
         if (synergyControllerProperties.getPropertyByName("surrogate_model_data_directory").getValueIsDefault()){
             synergyController.setValueIsDefault(true);
         }
+        synergyControllerProperties.getPropertyByName("optimize_synergy_vectors").setValueIsDefault(false);
+        synergyControllerProperties.getPropertyByName("synergy_vector_normalization_method").setValueIsDefault(false);
+        synergyControllerProperties.getPropertyByName("synergy_vector_normalization_value").setValueIsDefault(false);
 
         AbstractProperty costTermSet = dObject.getPropertyByName("RCNLCostTermSet");
         costTermSet.setValueIsDefault(false);

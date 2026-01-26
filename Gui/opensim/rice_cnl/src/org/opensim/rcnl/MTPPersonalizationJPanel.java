@@ -672,7 +672,7 @@ public class MTPPersonalizationJPanel extends BaseToolPanel  implements Observer
 
     @Override
     public void goToHelpURL() {
-        BrowserLauncher.openURL("https://nmsm.rice.edu/model-personalization/muscle-tendon-personalization/");
+        BrowserLauncher.openURL("https://nmsm.rice.edu/guides-and-publications/tool-overviews/model-personalization/muscle-tendon-personalization/");
     }
 
     @Override

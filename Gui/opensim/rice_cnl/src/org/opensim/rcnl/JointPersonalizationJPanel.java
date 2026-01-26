@@ -387,11 +387,6 @@ public class JointPersonalizationJPanel extends BaseToolPanel  implements Observ
     }
 
     @Override
-    public void goToHelpURL() {
-        BrowserLauncher.openURL("https://nmsm.rice.edu/model-personalization/joint-model-personalization/");
-    }
-
-    @Override
     public void setSettingsFileDescription(String description) {
         super.setSettingsFileDescription(description); //To change body of generated methods, choose Tools | Templates.
     }
@@ -448,6 +443,11 @@ public class JointPersonalizationJPanel extends BaseToolPanel  implements Observ
             retValue = Math.max(nextTaskIndex+1, retValue);
         }
         return retValue;
+    }
+
+    @Override
+    public void goToHelpURL() {
+        BrowserLauncher.openURL("https://nmsm.rice.edu/guides-and-publications/tool-overviews/model-personalization/joint-model-personalization/");
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
