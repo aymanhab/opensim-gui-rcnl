@@ -27,6 +27,7 @@ import org.opensim.modeling.OpenSimObject;
 import org.opensim.modeling.PropertyObjectList;
 import org.opensim.utils.FileUtils;
 import org.opensim.view.pub.OpenSimDB;
+import org.opensim.utils.BrowserLauncher;
 
 /**
  *
@@ -1220,6 +1221,11 @@ public class TreatmentOptimizationJPanel extends BaseToolPanel  implements Obser
         treatmentOptimizationToolModel.setOCSettingsFile(optimalControlSolverSettingsFile);
         treatmentOptimizationToolModel.setSurrogateModelDir(surrogateModelDataDirectory);
    }
+
+   @Override
+    public void goToHelpURL() {
+        BrowserLauncher.openURL("https://nmsm.rice.edu/treatment-optimization/");
+    }
 
     @Override
     // void forceWritableProperties(OpenSimObject dObject) {

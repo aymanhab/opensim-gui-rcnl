@@ -26,6 +26,7 @@ import org.opensim.modeling.OpenSimObject;
 import org.opensim.modeling.PropertyObjectList;
 import org.opensim.utils.FileUtils;
 import org.opensim.view.pub.OpenSimDB;
+import org.opensim.utils.BrowserLauncher;
 
 /**
  *
@@ -667,6 +668,11 @@ public class MTPPersonalizationJPanel extends BaseToolPanel  implements Observer
         jCheckBoxMTPInitialization.setSelected(mtpPersonalizationToolModel.getEnableInitialization());
         jCheckBoxSynergyExrapolate.setSelected(mtpPersonalizationToolModel.getEnableSynergies());
         jSpinnerSunergyCount.setValue(mtpPersonalizationToolModel.getNumSynergies());
+    }
+
+    @Override
+    public void goToHelpURL() {
+        BrowserLauncher.openURL("https://nmsm.rice.edu/model-personalization/muscle-tendon-personalization/");
     }
 
     @Override

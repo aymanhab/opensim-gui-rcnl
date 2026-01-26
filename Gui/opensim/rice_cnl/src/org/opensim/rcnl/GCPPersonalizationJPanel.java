@@ -28,6 +28,7 @@ import org.opensim.modeling.PropertyObjectList;
 import org.opensim.modeling.Storage;
 import org.opensim.utils.FileUtils;
 import org.opensim.view.pub.OpenSimDB;
+import org.opensim.utils.BrowserLauncher;
 
 /**
  *
@@ -480,6 +481,11 @@ public class GCPPersonalizationJPanel extends BaseToolPanel  implements Observer
         gcpPersonalizationToolModel.setInputGRFFile(inputGrfFileName);
         gcpPersonalizationToolModel.setInputOsimxFile(osimxFileName);
         gcpPersonalizationToolModel.setOutputResultDir(resultsDirectory);
+    }
+
+    @Override
+    public void goToHelpURL() {
+        BrowserLauncher.openURL("https://nmsm.rice.edu/model-personalization/ground-contact-personalization/intro/");
     }
 
 
