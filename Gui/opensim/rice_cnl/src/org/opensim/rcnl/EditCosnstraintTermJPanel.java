@@ -7,6 +7,9 @@ package org.opensim.rcnl;
 
 import java.text.NumberFormat;
 import java.text.ParseException;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import org.openide.DialogDescriptor;
@@ -279,8 +282,9 @@ public class EditCosnstraintTermJPanel extends javax.swing.JPanel {
 
     private void editComonentListButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_editComonentListButtonActionPerformed
         // TODO add your handling code here:
-        String[] names = RCNLCostTermsInfo.getAvailableNamesForComponentType(constraintTermModel.getComponentType(), constraintTermModel.getModel(), 
+        String[] allNames = RCNLCostTermsInfo.getAvailableNamesForComponentType(constraintTermModel.getComponentType(), constraintTermModel.getModel(), 
                 this.trackedDataDir, this.initialGuessDir, this.osimxFile);
+        String[] names = removeDuplicates(allNames);
         if (names.length == 0 && !constraintTermModel.getComponentType().equalsIgnoreCase("none")){
             NotifyDescriptor.Message dlg =
                           new NotifyDescriptor.Message("Error populating list of options, please check model, tracked data and initial guess directories.");
@@ -364,6 +368,11 @@ public class EditCosnstraintTermJPanel extends javax.swing.JPanel {
         jMinErrorTextFieldActionPerformed(null);
     }//GEN-LAST:event_jMinErrorTextFieldFocusLost
 
+    private String[] removeDuplicates(String[] input) {
+        if (input == null) return null;
+        Set<String> set = new LinkedHashSet<>(Arrays.asList(input));
+        return set.toArray(new String[0]);
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton editComonentListButton;

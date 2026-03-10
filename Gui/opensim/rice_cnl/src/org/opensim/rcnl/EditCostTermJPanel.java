@@ -8,6 +8,9 @@ package org.opensim.rcnl;
 import java.awt.Dialog;
 import java.text.NumberFormat;
 import java.text.ParseException;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.Vector;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
@@ -286,8 +289,9 @@ public class EditCostTermJPanel extends javax.swing.JPanel {
     private void editComonentListButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_editComonentListButtonActionPerformed
         // TODO add your handling code here:
         // get Component list from costTermModel as well as the corresponding property
-        String[] names = RCNLCostTermsInfo.getAvailableNamesForComponentType(costTermModel.getComponentType(), costTermModel.getModel(), 
+        String[] allNames = RCNLCostTermsInfo.getAvailableNamesForComponentType(costTermModel.getComponentType(), costTermModel.getModel(), 
                 this.trackedDataDir, this.initialGuessDir, this.osimxFile);
+        String[] names = removeDuplicates(allNames);
         if (names.length == 0 && !costTermModel.getComponentType().equalsIgnoreCase("none")){
              NotifyDescriptor.Message dlg =
                           new NotifyDescriptor.Message("Error populating list of options, please check model, tracked data and initial guess directories.");
@@ -373,6 +377,12 @@ public class EditCostTermJPanel extends javax.swing.JPanel {
         // TODO add your handling code here:
         jErrorCenterTextFieldActionPerformed(null);
     }//GEN-LAST:event_jErrorCenterTextFieldFocusLost
+
+    private String[] removeDuplicates(String[] input) {
+        if (input == null) return null;
+        Set<String> set = new LinkedHashSet<>(Arrays.asList(input));
+        return set.toArray(new String[0]);
+    }
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
