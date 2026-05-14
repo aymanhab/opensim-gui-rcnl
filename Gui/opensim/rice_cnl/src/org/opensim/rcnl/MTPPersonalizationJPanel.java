@@ -731,8 +731,8 @@ public class MTPPersonalizationJPanel extends BaseToolPanel  implements Observer
         String inputOsimxFile = mtpPersonalizationToolModel.getInputOsimxFile();
         String inputDataDirectory = mtpPersonalizationToolModel.getDataDir();
         String passiveDataDirectory = mtpPersonalizationToolModel.getPassiveDataDir();
-        Model model = OpenSimDB.getInstance().getCurrentModel();
-        String inputModelFileName = model.getInputFileName();
+        // Model model = OpenSimDB.getInstance().getCurrentModel();
+        // String inputModelFileName = model.getInputFileName();
 
         // Make paths relative to settings file
         Path resultsDirectoryPath = Paths.get(resultsDirectory);
@@ -759,11 +759,11 @@ public class MTPPersonalizationJPanel extends BaseToolPanel  implements Observer
             mtpPersonalizationToolModel.setPassiveDataDir(relativePassiveDataDirectory);
         }
 
-        Path inputModelFilePath = Paths.get(inputModelFileName);
-        String relativeInputModelFile = FileUtils.makePathRelative(inputModelFileName, settingsFilePath);
-        if (relativeInputModelFile != null && inputModelFilePath!=null && inputModelFilePath.isAbsolute()){
-            mtpPersonalizationToolModel.setInputModelFile(relativeInputModelFile);
-        }
+        // Path inputModelFilePath = Paths.get(inputModelFileName);
+        // String relativeInputModelFile = FileUtils.makePathRelative(inputModelFileName, settingsFilePath);
+        // if (relativeInputModelFile != null && inputModelFilePath!=null && inputModelFilePath.isAbsolute()){
+        //     mtpPersonalizationToolModel.setInputModelFile(relativeInputModelFile);
+        // }
 
         String fullFilename = FileUtils.addExtensionIfNeeded(fileName, ".xml");
         OpenSimObject obj = mtpPersonalizationToolModel.getToolAsObject();
@@ -775,7 +775,7 @@ public class MTPPersonalizationJPanel extends BaseToolPanel  implements Observer
         mtpPersonalizationToolModel.setInputOsimxFile(inputOsimxFile);
         mtpPersonalizationToolModel.setDataDir(inputDataDirectory);
         mtpPersonalizationToolModel.setPassiveDataDir(passiveDataDirectory);
-        mtpPersonalizationToolModel.setInputModelFile(inputModelFileName);
+        // mtpPersonalizationToolModel.setInputModelFile(inputModelFileName);
     }
 
     @Override
