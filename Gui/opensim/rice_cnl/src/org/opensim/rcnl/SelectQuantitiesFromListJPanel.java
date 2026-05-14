@@ -134,6 +134,8 @@ public class SelectQuantitiesFromListJPanel extends javax.swing.JPanel implement
            ((CoordinateTableModel) tableModel).selectShown();
         else if (tableModel instanceof ComponentTableModel)
            ((ComponentTableModel) tableModel).selectShown();
+        else if (tableModel instanceof MarkerTableModel)
+           ((MarkerTableModel) tableModel).selectShown();
 
         // TODO add your handling code here:
     }//GEN-LAST:event_jSelectAllCheckBoxActionPerformed
@@ -203,6 +205,8 @@ public class SelectQuantitiesFromListJPanel extends javax.swing.JPanel implement
            ((CoordinateTableModel) tableModel).restrictNamesBy(".*"+rawPattern+".*");
        else if (tableModel instanceof ComponentTableModel)
            ((ComponentTableModel) tableModel).restrictNamesBy(".*"+rawPattern+".*");
+       else if (tableModel instanceof MarkerTableModel)
+           ((MarkerTableModel) tableModel).restrictNamesBy(".*"+rawPattern+".*");
        //System.out.println("restrict by"+".*"+rawPattern+".*");
     }  
 }
