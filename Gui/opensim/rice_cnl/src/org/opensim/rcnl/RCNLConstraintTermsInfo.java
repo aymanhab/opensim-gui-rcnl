@@ -48,7 +48,7 @@ public class RCNLConstraintTermsInfo {
             "force", "force", "moment", 
             "moment", "moment", "moment",
             "moment", "moment", "moment",
-            "synergy_group", "synergy_group"}
+            "synergy", "synergy"}
     };
     static String[][] verificationConstraintTerms= {
         {   "generalized_coordinate_deviation", "generalized_coordinate_value", "generalized_coordinate_periodicity", 
@@ -128,7 +128,7 @@ public class RCNLConstraintTermsInfo {
             "force", "force", "moment", 
             "moment", "moment", "moment",
             "moment", "moment", "moment",
-            "synergy_group", "synergy_group", "muscle", 
+            "synergy", "synergy", "muscle", 
             "muscle"}
     };
     

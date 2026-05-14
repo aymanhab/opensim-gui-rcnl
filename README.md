@@ -115,9 +115,11 @@ Past funding includes the following grants and contracts:
  - United States Defense Advanced Research Projects Agency (DARPA)
     - Warrior Web (W911QX-12-C-0018)
   
-## Rice RCNL Plugin installation into generic OpenSim distribtion
-- Package the netbeans module as a jar file (Rught mouse click on rice_rcnl module in netbeans and choose Properties to see where the jar file will be created, it will have the name org-opensim-rcnl.jar)
-- In the opensim installation folder type:
+## Rice RCNL Plugin installation into generic OpenSim distribtion:
+for developers
+- Package the netbeans module as a jar file (Right mouse click on rice_rcnl module in netbeans and choose Properties to see where the jar file will be created, it will have the name org-opensim-rcnl.jar)
+for end users, download org-opensim-rcnl.jar from ... 
+- In the opensim installation folder, on windows, type:
 - "opensim64 --reload {full_path_to_jar_file}"
 - The previous step will install the GUI/menus/dialogs into the OpenSim application.
 - Install the C++ plugin into the plugins/ folder and load it.
