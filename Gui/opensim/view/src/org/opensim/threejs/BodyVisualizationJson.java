@@ -50,9 +50,8 @@ public class BodyVisualizationJson extends JSONObject{
         this.body = body;
         put("uuid", uuid.toString());
         put("type", "Group");
-        put("opensimType", "Frame");
-        put("userData", "NonEditable");
-        put("name", body.getAbsolutePathString());
+        put("userData", JSONUtilities.createUserDataObject("Frame", false));
+        put("name", body.getName());
         Transform bodyXform = body.getTransformInGround(modelJson.getState());
         put("matrix", JSONUtilities.createMatrixFromTransform(bodyXform, vec3Unit, modelJson.getVisScaleFactor()));
     }
@@ -66,7 +65,7 @@ public class BodyVisualizationJson extends JSONObject{
         UUID uuidForComGeometry = UUID.randomUUID();
         geomJson.put("uuid", uuidForComGeometry.toString());
         geomJson.put("type", "SphereGeometry");
-        geomJson.put("radius", 25);
+        geomJson.put("radius", "0.025");
         comGeometryUUID = uuidForComGeometry;
         return geomJson;
     }     
@@ -77,7 +76,7 @@ public class BodyVisualizationJson extends JSONObject{
         mat_json.put("name", "ComMat");
         mat_json.put("type", "MeshPhongMaterial");
         mat_json.put("shininess", 30);
-        mat_json.put("transparent", true);
+        mat_json.put("transparent", false);
         String colorString = JSONUtilities.mapColorToRGBA(new Vec3(.0, 1.0, 0));
         mat_json.put("color", colorString);
         mat_json.put("side", 2);
@@ -92,7 +91,7 @@ public class BodyVisualizationJson extends JSONObject{
         obj_json.put("uuid", comObjectUUID.toString());
         obj_json.put("type", "Mesh");
         obj_json.put("name", "Com");
-        obj_json.put("opensimType", "ModelCom");
+        obj_json.put("userData",JSONUtilities.createUserDataObject("BodyCom", false));
         obj_json.put("geometry", comGeometryUUID.toString());
         obj_json.put("material", comMaterialUUID.toString());
         Transform localTransform = new Transform();

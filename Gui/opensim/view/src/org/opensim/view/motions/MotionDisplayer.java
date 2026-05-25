@@ -69,6 +69,7 @@ import org.opensim.modeling.Transform;
 import org.opensim.modeling.TransformAxis;
 import org.opensim.modeling.UnitVec3;
 import org.opensim.modeling.Vec3;
+import org.opensim.threejs.AnimationJson;
 import org.opensim.threejs.JSONUtilities;
 import org.opensim.threejs.ModelVisualizationJson;
 import org.opensim.utils.TheApp;
@@ -109,12 +110,17 @@ public class MotionDisplayer {
     private final HashMap<UUID, Component> mapUUIDToComponent = new HashMap<UUID, Component>();
     private final HashMap<OpenSimObject, ArrayList<UUID>> mapComponentToUUID = 
             new HashMap<OpenSimObject, ArrayList<UUID>>();
-
+    private String clipUUID = null;
+    AnimationJson animationClip = null;
     /**
      * @return the modelVisJson
      */
     public ModelVisualizationJson getModelVisJson() {
         return modelVisJson;
+    }
+
+    public void associateDisplayer(MotionDisplayer newMotionDisplayer) {
+        getAssociatedMotions().add(newMotionDisplayer);
     }
 
     public enum ObjectTypesInMotionFiles{GenCoord, 
@@ -145,7 +151,7 @@ public class MotionDisplayer {
     OpenSimContext dContext; 
     ArrayStr stateNames;
     private boolean renderMuscleActivations=false;
-    private double experimentalMarkerRadius=1000;
+    private double experimentalMarkerRadius=1;
     private double experimentalForceScaleFactor=1;
     String DEFAULT_FORCE_SHAPE="arrow";
     private String currentForceShape;
@@ -238,6 +244,20 @@ public class MotionDisplayer {
 
     public void setMuscleColoringFunction(MuscleColoringFunction mcbya) {
         mcf = mcbya;
+        if (clipUUID!=null){
+            // recreate the clip with mcf on
+            String oldClipUUID = clipUUID;
+            animationClip = createAnimationClipForModelMotion(model, simmMotionData);
+            clipUUID = (String) animationClip.get("uuid");
+            MotionsDB.getInstance().addAnimationClipUUID(simmMotionData, clipUUID);
+            // Send a replaceAnimationClip
+            JSONObject currentAnimation = new JSONObject();
+            currentAnimation.put("Clip", getAnimationClip());
+            currentAnimation.put("Root", modelVisJson.getModelUUID().toString());
+            currentAnimation.put("Op", "ReplaceAnimationClip");
+            currentAnimation.put("oldClip", oldClipUUID.toString());
+            ViewDB.getInstance().sendAnimationClip(currentAnimation);
+        }
         // Push it down to muscle displayers
         ViewDB.getInstance().updateModelDisplayNoRepaint(model, true, true);
     }
@@ -319,9 +339,8 @@ public class MotionDisplayer {
             motionObjectsRoot.put("parent", modelVisJson.getModelUUID().toString());
             motionObjectsRoot.put("uuid", UUID.randomUUID().toString());
             motionObjectsRoot.put("type", "Group");
-            motionObjectsRoot.put("opensimType", "MotionObjects");
+            motionObjectsRoot.put("userData",JSONUtilities.createUserDataObject("MotionObjects", false));
             motionObjectsRoot.put("name", simmMotionData.getName().concat("_Objects"));
-            motionObjectsRoot.put("userData", "NonEditable");
             motionObjectsRoot.put("children", new JSONArray());
             motionObjectsRoot.put("matrix", JSONUtilities.createMatrixFromTransform(new Transform(), new Vec3(1.), 1.0));
 
@@ -371,7 +390,7 @@ public class MotionDisplayer {
                 defaultMarkerRadiusString);
         TheApp.getCurrentVersionPreferences().put("Visualizer: Experimental Marker Radius (mm)", currentSize);
         this.experimentalForceScaleFactor = 1.0;
-        this.experimentalMarkerRadius = Double.parseDouble(currentSize);
+        this.experimentalMarkerRadius = Double.parseDouble(currentSize)*.001;
         this.model = model;
         dContext= OpenSimDB.getInstance().getContext(model);
         simmMotionData = motionData;
@@ -860,5 +879,31 @@ public class MotionDisplayer {
             }
         }
    }
+   // if a clip exists in the map, return uuid else create and add to the map
+    public String getAnimationClipUUID() {
+        clipUUID = MotionsDB.getInstance().mapMotions2AnimationUUIDs.get(simmMotionData);
+        if (clipUUID==null){
+            animationClip = createAnimationClipForModelMotion(model, simmMotionData);
+            clipUUID = (String) animationClip.get("uuid");
+            MotionsDB.getInstance().addAnimationClipUUID(simmMotionData, clipUUID);
+        }
+        return clipUUID;
+    }
+    // get the clip associated with the displayer
+    public AnimationJson getAnimationClip() {
+        return animationClip;
+    }
+    
+    public AnimationJson createAnimationClipForModelMotion(Model model, Storage simmMotionData) {
+        ModelVisualizationJson modelViz = ViewDB.getInstance().getModelVisualizationJson(model);
+        if (simmMotionData instanceof AnnotatedMotion){
+            AnnotatedMotion amot = (AnnotatedMotion) simmMotionData;
+            animationClip = new AnimationJson(amot, amot.getClassified());
+        }
+        else { // Pass on MuscleColoringFunction
+            animationClip = modelViz.createAnimationJson(simmMotionData, mcf);
+        }
+        return animationClip;
+    }
 
 }

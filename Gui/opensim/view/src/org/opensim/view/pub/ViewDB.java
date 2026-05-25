@@ -66,6 +66,7 @@ import org.opensim.threejs.ModelVisualizationJson;
 import org.opensim.utils.ErrorDialog;
 import org.opensim.utils.TheApp;
 import org.opensim.view.*;
+import org.opensim.view.motions.MotionControlJPanel;
 
 
 /**
@@ -75,6 +76,20 @@ import org.opensim.view.*;
  * A Database of Displayed models
  */
 public final class ViewDB extends Observable implements Observer, LookupListener {
+
+    /**
+     * @return the scrubbing
+     */
+    public boolean isScrubbing() {
+        return scrubbing;
+    }
+
+    /**
+     * @param aScrubbing the scrubbing to set
+     */
+    public void setScrubbing(boolean aScrubbing) {
+        scrubbing = aScrubbing;
+    }
 
    // List of models currently available in all views
    private static ArrayList<Boolean> saveStatus = new ArrayList<Boolean>(4);
@@ -87,20 +102,20 @@ public final class ViewDB extends Observable implements Observer, LookupListener
     * as a message to visualizer.
    */
    private static boolean applyAppearanceChange = true;
-
+   private static boolean scrubbing = false;
     public void endAnimation() {
         JSONObject msg = new JSONObject();
         msg.put("Op", "endAnimation");
         websocketdb.broadcastMessageJson(msg, null);
-        
+        System.out.println("Sending endAnimation message");        
     }
-
-    public void startAnimation() {
+    
+    public void clearCurrentAnimation() {
         JSONObject msg = new JSONObject();
-        msg.put("Op", "startAnimation");
-        websocketdb.broadcastMessageJson(msg, null);
+        msg.put("Op", "ClearCurrentAnimation");
+        websocketdb.broadcastMessageJson(msg, null);       
     }
-
+    
     public void updateComponentVisuals(Model model, Component mc, Boolean frame) {
         if (websocketdb!=null){
             ModelVisualizationJson modelJson = getModelVisualizationJson(model);
@@ -131,10 +146,11 @@ public final class ViewDB extends Observable implements Observer, LookupListener
 
     }
 
-    public int getFrameTime() {
+    public int getFrameRate() {
         String saved = TheApp.getCurrentVersionPreferences().get("Internal.FrameRate", String.valueOf(frameRate));
         if (saved!= null)
             frameRate = Integer.parseInt(saved);
+        System.out.println("Setting frame rate to "+frameRate+" in ViewDB.getFrameRate");
         TheApp.getCurrentVersionPreferences().put("Internal.FrameRate", String.valueOf(frameRate));
         return frameRate; // 30 FPS default
     }
@@ -178,6 +194,20 @@ public final class ViewDB extends Observable implements Observer, LookupListener
 
     public void broadcastVisulaizerMessage(JSONObject json) {
         websocketdb.broadcastMessageJson(json, null);
+    }
+
+    public void sendAnimationCommand(String setCurrentAnimation, double startTime, double endTime) {
+        JSONObject topMsg = new JSONObject();
+        topMsg.put("Op", setCurrentAnimation);
+        topMsg.put("Start", startTime);
+        topMsg.put("End", endTime);
+        websocketdb.broadcastMessageJson(topMsg, null);
+    }
+
+    public void sendClearAnimationCommand() {
+        JSONObject topMsg = new JSONObject();
+        topMsg.put("Op", "ClearCurrentAnimation");
+        websocketdb.broadcastMessageJson(topMsg, null);
     }
   
    class AppearanceChange {
@@ -866,14 +896,22 @@ public final class ViewDB extends Observable implements Observer, LookupListener
    public void updateModelDisplay(Model aModel, OpenSimObject specificObject) {
       if (websocketdb != null && currentJson != null && applyAppearanceChange){
         // Make xforms JSON
-        websocketdb.broadcastMessageJson(currentJson.createFrameMessageJson(false, true), null);
+        //System.out.println("updateModelDisplay, scrubbig="+ getInstance().isScrubbing());
+        if (getInstance().isScrubbing())
+            websocketdb.broadcastMessageJson(currentJson.createAnimationTimeJson(), null);
+        else
+            websocketdb.broadcastMessageJson(currentJson.createFrameMessageJson(false, true), null);
       }
    }
    
    public void updateModelDisplayNoRepaint(Model aModel, boolean colorByState, boolean refresh) {
       if (websocketdb != null){
         ModelVisualizationJson cJson = mapModelsToJsons.get(aModel);
-        websocketdb.broadcastMessageJson(cJson.createFrameMessageJson(colorByState, refresh), null);
+        //System.out.println("updateModelDisplay, scrubbig="+ getInstance().isScrubbing());
+        if (getInstance().isScrubbing())
+            websocketdb.broadcastMessageJson(cJson.createAnimationTimeJson(), null);
+        else
+            websocketdb.broadcastMessageJson(cJson.createFrameMessageJson(colorByState, refresh), null);
       }
    }
 
@@ -893,66 +931,14 @@ public final class ViewDB extends Observable implements Observer, LookupListener
    }
 
    public void toggleObjectDisplay(OpenSimObject openSimObject, boolean visible) {
-      // use VisibleObject to hold on/off status, and
-      // do not repaint the windows or update any geometry because
-      // this is now handled by the functions that call toggleObjectDisplay().
-      //System.out.println("Toggle object "+openSimObject.getName()+" "+ (visible?"On":"Off"));
-       /*
-      VisibleObject vo = openSimObject.getDisplayer();
-      if (vo != null) {
-         DisplayPreference dp = vo.getDisplayPreference();
-         if (visible == true)
-            vo.setDisplayPreference(DisplayPreference.GouraudShaded); // TODO: assumes gouraud is the default
-         else
-            vo.setDisplayPreference(DisplayPreference.None);
-      }
-      else if (openSimObject instanceof Geometry){
-          ((Geometry)openSimObject).setDisplayPreference(visible? DisplayPreference.GouraudShaded:
-              DisplayPreference.None); // TODO: assumes gouraud is the default
-         
-      }
-      Marker marker = Marker.safeDownCast(openSimObject);
-      if (marker != null) {
-         SingleModelVisuals vis = getModelVisuals(marker.getBody().getModel());
-         //vis.setMarkerVisibility(marker, visible);
-         updateAnnotationAnchors(); // in case object had annotations
-         return;
-      }
-
-      Actuator act = Actuator.safeDownCast(openSimObject);
-      if (act != null) {
-         SingleModelVisuals vis = getModelVisuals(act.getModel());
-         vis.updateActuatorGeometry(act, visible); // call act.updateGeometry() if actuator is becoming visible
-         updateAnnotationAnchors(); // in case object had annotations
-         return;
-      }
-      Force f = Force.safeDownCast(openSimObject);
-      if (f != null) {
-         SingleModelVisuals vis = getModelVisuals(f.getModel());
-         vis.updateForceGeometry(f, visible); // call act.updateGeometry() if actuator is becoming visible
-         updateAnnotationAnchors(); // in case object had annotations
-         return;
-      }
-      
-      if (openSimObject instanceof ObjectGroup){
-          ObjectGroup grp = (ObjectGroup) openSimObject;
-          ArrayObjPtr members = grp.getMembers();
-          for(int i=0;i<members.getSize();i++)
-              toggleObjectDisplay(members.getitem(i), visible); // Recur
-          return;
-      }
-      // If the object is a vtkAssembly or vtkActor, sets its visibility that way too.
-      final int vtkVisible = visible ? 1 : 0;
-      vtkProp3D asm = ViewDB.getInstance().getVtkRepForObject(openSimObject);
-      ApplyFunctionToActors(asm, new ActorFunctionApplier() {
-         public void apply(vtkActor actor) {
-            actor.SetVisibility(vtkVisible);
-            actor.SetPickable(vtkVisible);
-         }});
-       */
     if (websocketdb != null){
-       
-       ModelVisualizationJson vizJson = getInstance().mapModelsToJsons.get(getCurrentModel());
+       // if selected object is a ModelComponent recover model from it, else use current model
+       // since OpenSimObject has no method to trace back to owner model
+       Model selectedModel = getCurrentModel();
+       ModelComponent modelComponent = ModelComponent.safeDownCast(openSimObject);
+       if (modelComponent != null)
+            selectedModel = modelComponent.getModel();
+       ModelVisualizationJson vizJson = getInstance().mapModelsToJsons.get(selectedModel);
        websocketdb.broadcastMessageJson(
                vizJson.createToggleObjectVisibilityCommand(openSimObject, visible), null);
     }
@@ -1300,11 +1286,6 @@ public final class ViewDB extends Observable implements Observer, LookupListener
            repaintAll();        
     }
 
-
-    public static boolean isVtkGraphicsAvailable() {
-        return false;
-    }
-
     public static void printBounds(String name, double[] bodyBounds) {
         System.out.print("Bounds for "+name+" are:[");
         for(int i=0; i<6; i++)
@@ -1406,18 +1387,12 @@ public final class ViewDB extends Observable implements Observer, LookupListener
         String msgType = (String)jsonObject.get("type");
         if (msgType != null) {
             if (msgType.equalsIgnoreCase("info")) {
-                if (jsonObject.get("renderTime")!=null){
-                    double frameRenderTimeInMillis = JSONMessageHandler.convertObjectFromJsonToDouble(jsonObject.get("renderTime"));
-                    //System.out.println("renderTime"+frameRenderTimeInMillis);
-                    int frameRate = (int) (frameRenderTimeInMillis*1.5);
-                    if (frameRate > 30)
-                        TheApp.getCurrentVersionPreferences().put("Internal.FrameRate", String.valueOf(frameRate));
+                if (jsonObject.get("fps")!=null){
+                    int frameRate = (int) JSONMessageHandler.convertObjectFromJsonToDouble(jsonObject.get("fps"));
+                    //System.out.println("FPS by viewer reported as:"+frameRate);
+                    if (debugLevel > 1) System.out.println("Setting frame rate to "+frameRate+" in ViewDB.handleJson fps");
+                    TheApp.getCurrentVersionPreferences().put("Internal.FrameRate", String.valueOf(frameRate));
                     return;
-                }
-                if (debugLevel > 1) {
-                    String msg = "Rendered " + jsonObject.get("numFrames") + " frames in " + jsonObject.get("totalTime") + " ms.";
-                    double rendertimeAverage = ((Double) jsonObject.get("totalTime")) / ((Long) jsonObject.get("numFrames"));
-                    OpenSimLogger.logMessage(msg + "FPS: " + (int) 1000 / rendertimeAverage + "\n", OpenSimLogger.INFO);
                 }
                 return;
             }
@@ -1452,6 +1427,33 @@ public final class ViewDB extends Observable implements Observer, LookupListener
                 WebSocketDB.getInstance().finishPendingMessage((String) jsonObject.get("uuid"));
                 return;
             }
+            if (msgType.equalsIgnoreCase("frameack")){
+                if (debugLevel > 1) System.out.println("Ack frame #"+jsonObject.get("#"));
+                return;
+            }
+            if (msgType.equalsIgnoreCase("FinishRecording")){
+                MotionControlJPanel.getInstance().endViewerRecording();
+                if (debugLevel > 1) System.out.println("End recording.");
+                return;
+            }
+            if (msgType.equalsIgnoreCase("Animation")){
+                String op = (String) jsonObject.get("OP");
+                if (op.equalsIgnoreCase("start")){
+                    MotionControlJPanel.getInstance().startViewerRecording();
+                    if (debugLevel > 1) System.out.println("Start recording.");
+                }
+                if (op.equalsIgnoreCase("setTime")){
+                    Object valueObj = jsonObject.get("value");
+                    double animationTime = 0.0;
+                    if (valueObj instanceof Double)
+                        animationTime = (double) jsonObject.get("value");
+                    else if (valueObj instanceof Long)
+                        animationTime = (long) jsonObject.get("value");
+                    //OpenSimLogger.logMessage("Setting current time from viewer to:"+String.valueOf(animationTime), OpenSimLogger.INFO);
+                    MotionControlJPanel.getInstance().setTimeNoRender(animationTime);
+                }
+                return;
+            }
         }
        Object uuid = jsonObject.get("uuid");
        String uuidString = (String) uuid;
@@ -1472,5 +1474,49 @@ public final class ViewDB extends Observable implements Observer, LookupListener
     }
     public void broadcastVisualizerMessage(JSONObject json){
         websocketdb.broadcastMessageJson(json, null);
+    }
+    
+    public void sendCurrentAnimations(JSONObject animationJson) {
+        if (debugLevel >1)
+            OpenSimLogger.logMessage("Sending AnimationClips to Viewer", OpenSimLogger.INFO);
+        websocketdb.broadcastMessageJson(animationJson, null);
+    }
+    
+    public void sendAnimationClip(JSONObject animationJson) {
+        if (debugLevel >1)
+            OpenSimLogger.logMessage("Sending AnimationClip to Viewer", OpenSimLogger.INFO);
+        websocketdb.broadcastMessageJson(animationJson, null);
+    }
+    
+     // Send animation speed (wrt real time) to viewer 
+    public void sendAnimationSpeed() {
+        JSONObject animationSpeedJson = new JSONObject();
+        animationSpeedJson.put("Op", "SetAnimationSpeed");
+        animationSpeedJson.put("speed", MotionControlJPanel.getInstance().getSpeed());
+        websocketdb.broadcastMessageJson(animationSpeedJson, null);
+       
+    }
+    // Send flag indicating the status of wrap motion 
+    public void sendAnimationLoop() {
+        JSONObject animationLoopJson = new JSONObject();
+        animationLoopJson.put("Op", "SetAnimationLoop");
+        animationLoopJson.put("state", MotionControlJPanel.getInstance().getMasterMotion().isWrapMotion());
+        websocketdb.broadcastMessageJson(animationLoopJson, null);
+    }
+    
+    public void playCurrentAnimations(double startTime, JSONArray uuids) {
+        if (debugLevel >1)
+            OpenSimLogger.logMessage("Play AnimationClips in Viewer", OpenSimLogger.INFO);
+        JSONObject currentAnimation = new JSONObject();
+        currentAnimation.put("Op", "PlayAnimation");
+        currentAnimation.put("start_time", startTime);
+        currentAnimation.put("speed", MotionControlJPanel.getInstance().getSpeed());
+        currentAnimation.put("loop", MotionControlJPanel.getInstance().getMasterMotion().isWrapMotion());        
+        currentAnimation.put("reverse", MotionControlJPanel.getInstance().isReverse());
+        // Send start time and directiion as users may play from middle either direction
+        currentAnimation.put("UUIDs", uuids);
+        // Could make this more robust by keeping track of uuid but as of now
+        // there's at most one animation in the viewer.
+        websocketdb.broadcastMessageJson(currentAnimation, null);
     }
 }

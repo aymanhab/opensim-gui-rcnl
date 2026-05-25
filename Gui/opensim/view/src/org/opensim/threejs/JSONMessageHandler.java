@@ -158,11 +158,11 @@ public class JSONMessageHandler {
     static public Vec3 convertJsonXYZToVec3(JSONObject offsetObj) {
         double relativeScale = ModelVisualizationJson.getVisScaleFactor();
         Object xString = offsetObj.get("x");
-        double xValue = JSONMessageHandler.convertObjectFromJsonToDouble(xString)/relativeScale;
+        double xValue = convertObjectFromJsonToDouble(xString)/relativeScale;
         Object yString = offsetObj.get("y");
-        double yValue = JSONMessageHandler.convertObjectFromJsonToDouble(yString)/relativeScale;
+        double yValue = convertObjectFromJsonToDouble(yString)/relativeScale;
         Object zString = offsetObj.get("z");
-        double zValue = JSONMessageHandler.convertObjectFromJsonToDouble(zString)/relativeScale;
+        double zValue = convertObjectFromJsonToDouble(zString)/relativeScale;
         Vec3 offsetAsVec3 = new Vec3(xValue, yValue, zValue);
         return offsetAsVec3;
     }

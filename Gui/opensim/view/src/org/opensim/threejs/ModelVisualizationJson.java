@@ -27,6 +27,7 @@
  */
 package org.opensim.threejs;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -36,9 +37,12 @@ import java.util.Set;
 import java.util.UUID;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.openide.util.Exceptions;
+import org.opensim.modeling.AbstractOutput;
 import org.opensim.modeling.AbstractPathPoint;
 import org.opensim.modeling.AbstractProperty;
 import org.opensim.modeling.ArrayDecorativeGeometry;
+import org.opensim.modeling.ArrayDouble;
 import org.opensim.modeling.ArrayPathPoint;
 import org.opensim.modeling.ArrayVec3;
 import org.opensim.modeling.BodyList;
@@ -48,6 +52,8 @@ import org.opensim.modeling.Component;
 import org.opensim.modeling.ComponentIterator;
 import org.opensim.modeling.ComponentsList;
 import org.opensim.modeling.ConditionalPathPoint;
+import org.opensim.modeling.Coordinate;
+import org.opensim.modeling.CoordinateSet;
 import org.opensim.modeling.DecorativeGeometry;
 import org.opensim.modeling.Force;
 import org.opensim.modeling.Frame;
@@ -57,17 +63,24 @@ import org.opensim.modeling.Marker;
 import org.opensim.modeling.Model;
 import org.opensim.modeling.ModelDisplayHints;
 import org.opensim.modeling.MovingPathPoint;
+import org.opensim.modeling.Muscle;
 import org.opensim.modeling.OpenSimObject;
+import org.opensim.modeling.OutputVec3;
 import org.opensim.modeling.PathPoint;
 import org.opensim.modeling.PathPointSet;
 import org.opensim.modeling.PathWrapPoint;
 import org.opensim.modeling.PhysicalFrame;
 import org.opensim.modeling.PropertyHelper;
+import org.opensim.modeling.Quaternion;
+import org.opensim.modeling.Rotation;
 import org.opensim.modeling.State;
+import org.opensim.modeling.StatesTrajectory;
+import org.opensim.modeling.Storage;
 import org.opensim.modeling.Transform;
 import org.opensim.modeling.Vec3;
 import org.opensim.modeling.WrapObject;
 import org.opensim.utils.TheApp;
+import org.opensim.view.MuscleColoringFunction;
 import org.opensim.view.experimentaldata.ModelForExperimentalData;
 import org.opensim.view.motions.MotionDisplayer;
 import org.opensim.view.pub.OpenSimDB;
@@ -111,17 +124,15 @@ public class ModelVisualizationJson extends JSONObject {
     }
     private final Model model;
     private State state;
-    private final HashMap<Integer, PhysicalFrame> mapBodyIndicesToFrames = new HashMap<Integer, PhysicalFrame>();
-    private final HashMap<Integer, JSONObject> mapBodyIndicesToJson = new HashMap<Integer, JSONObject>();
-    private final static double visScaleFactor = 1000.0;
-    private final HashMap<String, UUID> mapDecorativeGeometryToUUID = new HashMap<String, UUID>();
-    private final HashMap<UUID, Component> mapUUIDToComponent = new HashMap<UUID, Component>();
-    private final HashMap<OpenSimObject, ArrayList<UUID>> mapComponentToUUID = 
-            new HashMap<OpenSimObject, ArrayList<UUID>>();
+    private final HashMap<Integer, PhysicalFrame> mapBodyIndicesToFrames = new HashMap<>();
+    private final HashMap<Integer, JSONObject> mapBodyIndicesToJson = new HashMap<>();
+    private final static double visScaleFactor = 1.0;
+    private final HashMap<String, UUID> mapDecorativeGeometryToUUID = new HashMap<>();
+    private final HashMap<UUID, Component> mapUUIDToComponent = new HashMap<>();
+    private final HashMap<OpenSimObject, ArrayList<UUID>> mapComponentToUUID = new HashMap<>();
     private static final String GEOMETRY_SEP = ".";
     private ModelDisplayHints mdh;
     private DecorativeGeometryImplementationJS dgimp = null;
-    private static String boneSuffix = "_Bone";
     private JSONArray json_geometries;
     private JSONArray json_materials;
     private JSONObject model_object;
@@ -140,11 +151,12 @@ public class ModelVisualizationJson extends JSONObject {
     private final HashMap<Frame, VisualizerFrame> visualizerFrames = new HashMap<Frame, VisualizerFrame>();
     private ArrayList<VisualizerAddOn> visualizerAddOns = new ArrayList<VisualizerAddOn>();
     private VisualizerAddOnCom comVizAddOn = new VisualizerAddOnCom();
+    private HashMap<String, ArrayList<Double>> mapUUIDToAnimationTrack = new HashMap<>();
     private boolean showCom = false;
     private PathColorMap currentPathColorMap;
     // Preferences
-    private double prefMuscleDisplayRadius=0.005;
-    private int NUM_PATHPOINTS_PER_WRAP_OBJECT=8;
+    private double prefMuscleDisplayRadius=5;
+    private int NUM_PATHPOINTS_PER_WRAP_OBJECT=4;
     private double PATHPOINT_SCALEUP=1.05;
     private boolean debug_path=false;
     public Boolean getFrameVisibility(Frame b) {
@@ -187,7 +199,7 @@ public class ModelVisualizationJson extends JSONObject {
             }
             ArrayDecorativeGeometry adg = new ArrayDecorativeGeometry();
             comp.generateDecorations(true, mdh, state, adg);
-            ArrayList<UUID> vis_uuidList = mapComponentToUUID.get(comp);
+            ArrayList<UUID> vis_uuidList = getMapComponentToUUID().get(comp);
             if (vis_uuidList !=null){
                 int idx = 0;
                 if (vis_uuidList.size()==adg.size()){
@@ -195,8 +207,7 @@ public class ModelVisualizationJson extends JSONObject {
                         JSONObject oneGeomXform_json = new JSONObject();
                         oneGeomXform_json.put("uuid", uuid.toString());
                         oneGeomXform_json.put("matrix", 
-                                JSONUtilities.createMatrixFromTransform(adg.at(idx).getTransform(), adg.at(idx).getScaleFactors(), 
-                                        visScaleFactor));
+                                JSONUtilities.createMatrixFromTransform(adg.at(idx).getTransform(), adg.at(idx).getScaleFactors(), getVisScaleFactor()));
                         geomTransforms_json.add(oneGeomXform_json);
                         idx++;
                     }
@@ -282,14 +293,14 @@ public class ModelVisualizationJson extends JSONObject {
                 // create numIntermediatePoints between currentPoint and secondPoint
                 if (numIntermediatePoints > 0)
                     pathVisInfo.setStartVisualizerPointIndexForSegment(segmentNumber, pathpoint_jsonArr.size() );
-                createComputedPathPoints(numIntermediatePoints, firstPoint, secondPoint, pathpoint_jsonArr, null);
+                createComputedPathPoints(numIntermediatePoints, firstPoint, secondPoint, pathpoint_jsonArr, null, state);
             }
             else if (secondIndex == -1){ // Conditional Path point that's inactive
                 ConditionalPathPoint cpp = ConditionalPathPoint.safeDownCast(secondPoint);
                 //System.out.println("Not found in path, ppt:"+secondPoint.getName());
                 if (numIntermediatePoints>0)
                     pathVisInfo.setStartVisualizerPointIndexForSegment(segmentNumber, pathpoint_jsonArr.size());
-                Vec3 computedLocation = computePathPointLocation(secondIndex, pathPointSetFromProperty);
+                Vec3 computedLocation = computePathPointLocation(secondIndex, pathPointSetFromProperty, state);
                 JSONObject bpptInBodyJson = createPathPointObjectJson(cpp, false, computedLocation, 
                         pathpointmat_uuid.toString(), pointsVisible);
                 addParentUuid(cpp, bpptInBodyJson);
@@ -313,7 +324,7 @@ public class ModelVisualizationJson extends JSONObject {
                 }
                 ArrayList<Integer> pointCount = new  ArrayList<Integer>(numWrapPoints);
                 ArrayList<Integer> visPointCount = new  ArrayList<Integer>(numWrapPoints);
-                calculateWrapPointsToVisualzerPointsMapping(firstIndex, secondIndex, actualPath, pointCount, numIntermediatePoints, visPointCount);
+                calculateWrapPointsToVisualzerPointsMapping(firstIndex, secondIndex, actualPath, pointCount, numIntermediatePoints, visPointCount, state);
                 pathVisInfo.setStartVisualizerPointIndexForSegment(segmentNumber, pathpoint_jsonArr.size());
                 for (int wrappointIndex = firstIndex + 1; wrappointIndex < secondIndex; wrappointIndex++) {
                     AbstractPathPoint nextPathPoint = actualPath.get(wrappointIndex);
@@ -334,7 +345,7 @@ public class ModelVisualizationJson extends JSONObject {
                             JSONObject bodyJson = mapBodyIndicesToJson.get(0); // These points live in Ground
                             //JSONArray children = (JSONArray) bodyJson.get("children");
                             for (int j = 0; j < indicesToUse.length; j++) {
-                                Vec3 globalLocation = wrapPtsFrame.findStationLocationInAnotherFrame(state, pathwrap.get(indicesToUse[j]), mapBodyIndicesToFrames.get(0));
+                                Vec3 globalLocation = wrapPtsFrame.findStationLocationInAnotherFrame(state, pathwrap.get(indicesToUse[j]), getMapBodyIndicesToFrames().get(0));
                                 JSONObject bpptInBodyJson = createPathPointObjectJson(null, false, globalLocation, pathpointmat_uuid.toString(), false);
                                 UUID ppt_uuid = UUID.fromString((String) bpptInBodyJson.get("uuid"));
                                 bpptInBodyJson.put("parent", retrieveUuidFromJson(modelGroundJson).toString());
@@ -389,7 +400,7 @@ public class ModelVisualizationJson extends JSONObject {
         obj_json.put("name", path.getAbsolutePathString());
         obj_json.put("points", pathpoint_jsonArr);
         obj_json.put("geometry", uuidForPathGeomGeometry.toString());
-        obj_json.put("opensimType", "Path");
+        obj_json.put("userData",JSONUtilities.createUserDataObject("Path", false));
         // Create json entry for material (path_material) and set skinning to true
         obj_json.put("material", pathmat_uuid.toString());
         obj_json.put("PathGeometry",pathGeomJson);
@@ -448,7 +459,7 @@ public class ModelVisualizationJson extends JSONObject {
         String currentSize= TheApp.getCurrentVersionPreferences().get("Visualizer: Muscle Display Radius (mm)", saved);
         TheApp.getCurrentVersionPreferences().put("Visualizer: Muscle Display Radius (mm)", currentSize);
         prefMuscleDisplayRadius = Double.parseDouble(currentSize);
-        actualMuscleDisplayRadius = prefMuscleDisplayRadius;
+        actualMuscleDisplayRadius = prefMuscleDisplayRadius*.001;
         createJsonForModel(model);
         ready = true;
         if (verbose)
@@ -470,7 +481,7 @@ public class ModelVisualizationJson extends JSONObject {
         modelGroundJson.put("children", bodies_json);
         while (!body.equals(bodies.end())) {
             int id = body.getMobilizedBodyIndex();
-            mapBodyIndicesToFrames.put(id, body.__deref__());
+            getMapBodyIndicesToFrames().put(id, body.__deref__());
             //System.out.println("id=" + id + " body =" + body.getName());
             UUID body_uuid = UUID.randomUUID();
             BodyVisualizationJson bodyJson = createBodyJson(body.__deref__(), body_uuid);
@@ -486,7 +497,7 @@ public class ModelVisualizationJson extends JSONObject {
         markerMatUUID= createMarkerMaterial(mdh);
         pathPointGeometryJSON = createPathPointGeometryJSON(1.0);
         editablePathPointGeometryJSON = createPathPointGeometryJSON(PATHPOINT_SCALEUP);
-        dgimp = new DecorativeGeometryImplementationJS(json_geometries, json_materials, visScaleFactor);
+        dgimp = new DecorativeGeometryImplementationJS(json_geometries, json_materials, getVisScaleFactor());
         while (!mcIter.equals(mcList.end())) {
             Component comp = mcIter.__deref__();
             processDecorationsForComponent(comp);
@@ -552,17 +563,16 @@ public class ModelVisualizationJson extends JSONObject {
     }
 
     private JSONObject processGroundFrame(Model model) {
-        mapBodyIndicesToFrames.put(0, model.getGround());
+        getMapBodyIndicesToFrames().put(0, model.getGround());
         JSONArray json_model_children = (JSONArray) ((JSONObject) get("object")).get("children");
         JSONObject model_ground_json = new JSONObject();
         // create model node
         UUID groundUuid = UUID.randomUUID();
         model_ground_json.put("uuid", groundUuid.toString());
         model_ground_json.put("type", "Group");
-        model_ground_json.put("opensimType", "Frame");
-        model_ground_json.put("name", model.getGround().getAbsolutePathString());
-        model_ground_json.put("userData", "NonEditable");
-        model_ground_json.put("model_ground", true);
+        model_ground_json.put("userData",JSONUtilities.createUserDataObject("Ground", false));
+        model_ground_json.put("name", model.getGround().getName());
+        //model_ground_json.put("model_ground", true);
         json_model_children.add(model_ground_json);
         addComponentToUUIDMap(model.getGround(), groundUuid);
         mapBodyIndicesToJson.put(0, model_ground_json);
@@ -572,7 +582,7 @@ public class ModelVisualizationJson extends JSONObject {
     private void addComponentToUUIDMap(Component comp, UUID groupUuid) {
         ArrayList<UUID> comp_uuids = new ArrayList<UUID>();
         comp_uuids.add(groupUuid);
-        mapComponentToUUID.put(comp, comp_uuids);
+        getMapComponentToUUID().put(comp, comp_uuids);
         mapUUIDToComponent.put(groupUuid, comp);
         
     }
@@ -584,7 +594,7 @@ public class ModelVisualizationJson extends JSONObject {
             DecorativeGeometryImplementationJS dgimp, JSONArray json_materials, boolean visible) {
         DecorativeGeometry dg;
         
-        ArrayList<UUID> vis_uuidList = mapComponentToUUID.get(comp);
+        ArrayList<UUID> vis_uuidList = getMapComponentToUUID().get(comp);
         if (vis_uuidList == null)
             vis_uuidList = new ArrayList<UUID>(1);
         // Detect partial wrap object and if true set quadrant in dgimp so it's observed
@@ -643,7 +653,7 @@ public class ModelVisualizationJson extends JSONObject {
             dgimp.useMaterial(null);
 
         if (!vis_uuidList.isEmpty())
-            mapComponentToUUID.put(comp, vis_uuidList);
+            getMapComponentToUUID().put(comp, vis_uuidList);
         if (verbose)
             System.out.println("Map component="+comp.getAbsolutePathString()+" to "+vis_uuidList.size());   
  
@@ -654,7 +664,7 @@ public class ModelVisualizationJson extends JSONObject {
         model_object = new JSONObject();
         model_object.put("uuid", modelUUID.toString());
         model_object.put("type", "Group");
-        model_object.put("opensimType", "Model");
+        model_object.put("userData",JSONUtilities.createUserDataObject("Model", true));
         model_object.put("name", model.getName());
         model_object.put("children", new JSONArray());
         model_object.put("matrix", JSONUtilities.createMatrixFromTransform(getTransformWRTScene(), new Vec3(1.), 1.0));
@@ -663,6 +673,12 @@ public class ModelVisualizationJson extends JSONObject {
         put("geometries", json_geometries);
         json_materials = new JSONArray();
         put("materials", json_materials);
+        // More recent versions of three.js ObjectLoader requires metadata
+        JSONObject metadata_object = new JSONObject();
+        metadata_object.put("version", "4.5"); 
+        metadata_object.put("type", "Object"); 
+        metadata_object.put("generator", "OpenSim generator"); 
+        put("metadata", metadata_object);
 
     }
 
@@ -687,17 +703,15 @@ public class ModelVisualizationJson extends JSONObject {
         obj_json.put("uuid", mesh_uuid.toString());
         obj_json.put("type", "Mesh");
         obj_json.put("name", geomName);
-        obj_json.put("opensimType", opensimComponent.getConcreteClassName());
+        String concreteType = opensimComponent.getConcreteClassName();
+        obj_json.put("userData",JSONUtilities.createUserDataObject(opensimComponent.getConcreteClassName(), movableOpensimTypes.keySet().contains(concreteType)));
         obj_json.put("geometry", uuid_geom.toString());
         obj_json.put("material", uuid_mat.toString());
-        obj_json.put("matrix", JSONUtilities.createMatrixFromTransform(dg.getTransform(), dg.getScaleFactors(), visScaleFactor));
+        obj_json.put("matrix", JSONUtilities.createMatrixFromTransform(dg.getTransform(), dg.getScaleFactors(), getVisScaleFactor()));
         obj_json.put("castShadow", false);
         if (!visible){
             obj_json.put("visible", false);
         }
-        String concreteType = opensimComponent.getConcreteClassName();
-        if (!movableOpensimTypes.keySet().contains(concreteType))
-            obj_json.put("userData", "NonEditable");
         mobody_objects.add(obj_json);
         return obj_json;
     }   
@@ -717,7 +731,7 @@ public class ModelVisualizationJson extends JSONObject {
     }
 
     public ArrayList<UUID> findUUIDForObject(OpenSimObject obj) {
-        return mapComponentToUUID.get(obj);
+        return getMapComponentToUUID().get(obj);
     }
     //============
     // PER FRAME
@@ -737,7 +751,7 @@ public class ModelVisualizationJson extends JSONObject {
     }
     /// UPDATE #2
     public void appendToFrame(JSONArray bodyTransforms_json, boolean colorByState, JSONArray geompaths_json) {
-        Iterator<Integer> bodyIdIter = mapBodyIndicesToFrames.keySet().iterator();
+        Iterator<Integer> bodyIdIter = getMapBodyIndicesToFrames().keySet().iterator();
         if (ready) { // Avoid trying to send a frame before Json is completely populated
             while (bodyIdIter.hasNext()) {
                 int bodyId = bodyIdIter.next();
@@ -745,14 +759,14 @@ public class ModelVisualizationJson extends JSONObject {
                     continue; // Skip over "Ground, as unnecessary
                 }
                 JSONObject oneBodyXform_json = new JSONObject();
-                PhysicalFrame bodyFrame = mapBodyIndicesToFrames.get(bodyId);
+                PhysicalFrame bodyFrame = getMapBodyIndicesToFrames().get(bodyId);
                 if (verbose) {
                     System.out.println("Getting transform of " + bodyFrame.getName());
                 }
                 Transform xform = bodyFrame.getTransformInGround(state);
                 // Get uuid for first Mesh in body
                 oneBodyXform_json.put("uuid", mapBodyIndicesToJson.get(bodyId).get("uuid"));
-                oneBodyXform_json.put("matrix", JSONUtilities.createMatrixFromTransform(xform, new Vec3(1., 1., 1.), visScaleFactor));
+                oneBodyXform_json.put("matrix", JSONUtilities.createMatrixFromTransform(xform, new Vec3(1., 1., 1.), getVisScaleFactor()));
                 bodyTransforms_json.add(oneBodyXform_json);
             }
             // If we have special components
@@ -766,7 +780,7 @@ public class ModelVisualizationJson extends JSONObject {
                     localTransform.setP(location);
                     JSONObject pathpointXform_json = new JSONObject();
                     pathpointXform_json.put("uuid", movingComponents.get(comp).toString());
-                    pathpointXform_json.put("matrix", JSONUtilities.createMatrixFromTransform(localTransform, new Vec3(1., 1., 1.), visScaleFactor));
+                    pathpointXform_json.put("matrix", JSONUtilities.createMatrixFromTransform(localTransform, new Vec3(1., 1., 1.), getVisScaleFactor()));
                     bodyTransforms_json.add(pathpointXform_json);
                     continue;
                 }
@@ -777,12 +791,12 @@ public class ModelVisualizationJson extends JSONObject {
                 if (!app.isActive(state)){
                     ComputedPathPointInfo proxyPointInfo = proxyPathPoints.get(app);
                     //System.out.println("Use proxy "+proxyPoint.getName());
-                    Vec3 loc = computePointLocationFromNeighbors(proxyPointInfo.pt1, app.getBody(), proxyPointInfo.pt2, proxyPointInfo.ratio);
+                    Vec3 loc = computePointLocationFromNeighbors(proxyPointInfo.pt1, app.getBody(), proxyPointInfo.pt2, proxyPointInfo.ratio, state);
                     Transform localTransform = new Transform();
                     localTransform.setP(loc);
                     JSONObject pathpointXform_json = new JSONObject();
-                    pathpointXform_json.put("uuid", mapComponentToUUID.get(app).get(0).toString());
-                    pathpointXform_json.put("matrix", JSONUtilities.createMatrixFromTransform(localTransform, new Vec3(1., 1., 1.), visScaleFactor));
+                    pathpointXform_json.put("uuid", getMapComponentToUUID().get(app).get(0).toString());
+                    pathpointXform_json.put("matrix", JSONUtilities.createMatrixFromTransform(localTransform, new Vec3(1., 1., 1.), getVisScaleFactor()));
                     bodyTransforms_json.add(pathpointXform_json);
                 }
                 else {
@@ -792,28 +806,28 @@ public class ModelVisualizationJson extends JSONObject {
                     Vec3 location = app.getLocation(state);
                     localTransform.setP(location);
                     JSONObject pathpointXform_json = new JSONObject();
-                    pathpointXform_json.put("uuid", mapComponentToUUID.get(app).get(0).toString());
-                    pathpointXform_json.put("matrix", JSONUtilities.createMatrixFromTransform(localTransform, new Vec3(1., 1., 1.), visScaleFactor));
+                    pathpointXform_json.put("uuid", getMapComponentToUUID().get(app).get(0).toString());
+                    pathpointXform_json.put("matrix", JSONUtilities.createMatrixFromTransform(localTransform, new Vec3(1., 1., 1.), getVisScaleFactor()));
                     bodyTransforms_json.add(pathpointXform_json);
                 } 
             }
-            PhysicalFrame ground = mapBodyIndicesToFrames.get(0);
+            PhysicalFrame ground = getMapBodyIndicesToFrames().get(0);
             // RECOMPUTE POINTS AS NO WRAPPING, points close to one end
             for (UUID computedPointUUID: computedPathPoints.keySet()){
                 ComputedPathPointInfo computedPointInfo = computedPathPoints.get(computedPointUUID);
-                Vec3 loc = computePointLocationFromNeighbors(computedPointInfo.pt1, ground, computedPointInfo.pt2, computedPointInfo.ratio);
+                Vec3 loc = computePointLocationFromNeighbors(computedPointInfo.pt1, ground, computedPointInfo.pt2, computedPointInfo.ratio, state);
                 Transform localTransform = new Transform();
                 localTransform.setP(loc);
                 JSONObject pathpointXform_json = new JSONObject();
                 pathpointXform_json.put("uuid", computedPointUUID.toString());
-                pathpointXform_json.put("matrix", JSONUtilities.createMatrixFromTransform(localTransform, new Vec3(1., 1., 1.), visScaleFactor));
+                pathpointXform_json.put("matrix", JSONUtilities.createMatrixFromTransform(localTransform, new Vec3(1., 1., 1.), getVisScaleFactor()));
                 bodyTransforms_json.add(pathpointXform_json);
             }
             if (!pathsWithWrapping.isEmpty()){
                 
                 // Update status of Wrappoints accordingly
                 for (GeometryPath path:pathsWithWrapping.keySet()){
-                    updatePathWithWrapping(path, bodyTransforms_json);
+                    updatePathWithWrapping(path, bodyTransforms_json, state);
                 }
             }            // Computed points need recomputation
 
@@ -826,9 +840,6 @@ public class ModelVisualizationJson extends JSONObject {
                 JSONObject pathUpdate_json = new JSONObject();
                 pathUpdate_json.put("uuid", pathUUID.toString());
                 Vec3 pathColor = colorByState ? currentPathColorMap.getColor(geomPathObject, state, -1) : geomPathObject.getDefaultColor();
-            
-                if (verbose)
-                    System.out.println("Color:"+geomPathObject.getOwner().getName()+"="+pathColor.toString());
                 String colorString = JSONUtilities.mapColorToRGBA(pathColor);
                 pathUpdate_json.put("color", colorString);
                 geompaths_json.add(pathUpdate_json);
@@ -844,7 +855,12 @@ public class ModelVisualizationJson extends JSONObject {
         }
     }
         
-
+    public JSONObject createAnimationTimeJson() {
+        JSONObject msg = new JSONObject();
+        msg.put("Op", "AnimationTime");
+        msg.put("time", state.getTime());
+        return msg;
+    }
     public JSONObject createSelectionJson(OpenSimObject obj) {
         JSONObject formJSON = new JSONObject();
         ArrayList<UUID> uuids = findUUIDForObject(obj);
@@ -996,7 +1012,7 @@ public class ModelVisualizationJson extends JSONObject {
                 msg.put("uuid", uuid.toString());
                 geoms.add(jsonObject);
                 jsonObject.put("matrix", JSONUtilities.createMatrixFromTransform(dg.getTransform(), 
-                        dg.getScaleFactors(), visScaleFactor));
+                        dg.getScaleFactors(), getVisScaleFactor()));
             }
             msg.put("geometries", geoms);
         }
@@ -1019,7 +1035,7 @@ public class ModelVisualizationJson extends JSONObject {
         JSONArray locationArray = new JSONArray();
         JSONArray oldLocationArray = new JSONArray();
         for (int p =0; p <3; p++){
-            locationArray.add(location.get(p)*visScaleFactor);
+            locationArray.add(location.get(p)*getVisScaleFactor());
             oldLocationArray.add(0);
         }
         nextpptPositionCommand.put("newPosition", locationArray);
@@ -1048,7 +1064,7 @@ public class ModelVisualizationJson extends JSONObject {
         mat_json.put("uuid", mat_uuid.toString());
         mat_json.put("name", "MarkerMat");
         mat_json.put("type", "MeshPhongMaterial");
-        mat_json.put("transparent", true);
+        mat_json.put("transparent", false);
         mat_json.put("shininess", 30);
         mat_json.put("side", 2);
         //mat_json.put("transparent", true);
@@ -1073,10 +1089,10 @@ public class ModelVisualizationJson extends JSONObject {
         UUID uuidForFrameGeometry = UUID.randomUUID();
         frame_json.put("uuid", uuidForFrameGeometry.toString());
         frame_json.put("type", "Frame");
-        frame_json.put("size", visScaleFactor);
+        frame_json.put("size", getVisScaleFactor());
         frame_json.put("visible", false);
         frame_json.put("name", frameObject.getAbsolutePathString());
-        frame_json.put("matrix", JSONUtilities.createMatrixFromTransform(dg.getTransform(), frameObject.get_scale_factors(), visScaleFactor));
+        frame_json.put("matrix", JSONUtilities.createMatrixFromTransform(dg.getTransform(), frameObject.get_scale_factors(), getVisScaleFactor()));
         // insert frame_json as child of BodyObject based on dg.getBodyId
         JSONObject bodyJson = mapBodyIndicesToJson.get(dg.getBodyId());
         if (bodyJson.get("children")==null)
@@ -1102,8 +1118,8 @@ public class ModelVisualizationJson extends JSONObject {
     public JSONObject createRemoveObjectCommand(OpenSimObject object2Remove, OpenSimObject parent) {
         JSONObject guiJson = new JSONObject();
         guiJson.put("Op", "execute");
-        UUID objectUUID = mapComponentToUUID.get(object2Remove).get(0);
-        UUID parentUUID = mapComponentToUUID.get(parent).get(0);
+        UUID objectUUID = getMapComponentToUUID().get(object2Remove).get(0);
+        UUID parentUUID = getMapComponentToUUID().get(parent).get(0);
         JSONObject commandJson = CommandComposerThreejs.createRemoveObjectByUUIDCommandJson(objectUUID, parentUUID);
         guiJson.put("command", commandJson);
         return guiJson;
@@ -1119,7 +1135,7 @@ public class ModelVisualizationJson extends JSONObject {
     public JSONObject createTranslateObjectCommand(OpenSimObject marker, Vec3 newLocation) {
         JSONObject guiJson = new JSONObject();
         guiJson.put("Op", "execute");
-        UUID markerUuid = mapComponentToUUID.get(marker).get(0);
+        UUID markerUuid = getMapComponentToUUID().get(marker).get(0);
         JSONObject commandJson = createSetPositionCommand(markerUuid, newLocation);
         guiJson.put("command", commandJson);
         return guiJson;
@@ -1174,7 +1190,7 @@ public class ModelVisualizationJson extends JSONObject {
         return topObject;
     }
 
-    private Vec3 computePathPointLocation(int index, PathPointSet pathpointsArray) {
+    private Vec3 computePathPointLocation(int index, PathPointSet pathpointsArray, State curState) {
         // find closest Active points before and after
         int numPre = 1;
         int numPost = 1;
@@ -1192,37 +1208,38 @@ public class ModelVisualizationJson extends JSONObject {
         AbstractPathPoint postPoint = pathpointsArray.get(index + numPost);
         final PhysicalFrame parentFrame = curPoint.getParentFrame();
         proxyPathPoints.put(curPoint, new ComputedPathPointInfo(prePoint, postPoint, ratio));
-        Vec3 retVec3 = computePointLocationFromNeighbors(prePoint, parentFrame, postPoint, ratio);
+        Vec3 retVec3 = computePointLocationFromNeighbors(prePoint, parentFrame, postPoint, ratio, curState);
         return retVec3;
     }
 
-    private Vec3 computePointLocationFromNeighbors(AbstractPathPoint prePoint, final PhysicalFrame parentFrame, AbstractPathPoint postPoint, double ratio) {
+    private Vec3 computePointLocationFromNeighbors(AbstractPathPoint prePoint, final PhysicalFrame parentFrame, AbstractPathPoint postPoint, 
+            double ratio, State curState) {
         AbstractPathPoint activePrePoint = prePoint;
         AbstractPathPoint activePostPoint = postPoint;
         GeometryPath gp=null;
-        if(!activePrePoint.isActive(state)){
+        if(!activePrePoint.isActive(curState)){
             // traversebackward to first active point
             gp = GeometryPath.safeDownCast(activePrePoint.getOwner());
             PathPointSet pathPts = gp.getPathPointSet();
             int idx = pathPts.getIndex(activePrePoint);
-            while (idx >=0 && !pathPts.get(idx).isActive(state))
+            while (idx >=0 && !pathPts.get(idx).isActive(curState))
                 idx--;
             activePrePoint = pathPts.get(idx);
         }
-        Vec3 localLocation = activePrePoint.getLocation(state);
-        Vec3 preLocation = activePrePoint.getBody().findStationLocationInAnotherFrame(state, localLocation, parentFrame);
-        if (!activePostPoint.isActive(state)){
+        Vec3 localLocation = activePrePoint.getLocation(curState);
+        Vec3 preLocation = activePrePoint.getBody().findStationLocationInAnotherFrame(curState, localLocation, parentFrame);
+        if (!activePostPoint.isActive(curState)){
             if (gp==null)
                 gp = GeometryPath.safeDownCast(activePostPoint.getOwner());
             PathPointSet pathPts = gp.getPathPointSet();
             int idx = pathPts.getIndex(activePostPoint);
-            while (idx <= pathPts.getSize()-1 && !pathPts.get(idx).isActive(state))
+            while (idx <= pathPts.getSize()-1 && !pathPts.get(idx).isActive(curState))
                 idx++;
             activePostPoint = pathPts.get(idx);
             
         }
-        localLocation = activePostPoint.getLocation(state);
-        Vec3 postLocation = activePostPoint.getBody().findStationLocationInAnotherFrame(state, localLocation, parentFrame);
+        localLocation = activePostPoint.getLocation(curState);
+        Vec3 postLocation = activePostPoint.getBody().findStationLocationInAnotherFrame(curState, localLocation, parentFrame);
         Vec3 retVec3 = new Vec3();
         for (int i =0; i < 3; i++){
             retVec3.set(i, (preLocation.get(i)*(1-ratio)+postLocation.get(i)*ratio));
@@ -1237,7 +1254,7 @@ public class ModelVisualizationJson extends JSONObject {
      * points array following the uuid cooresponding to currentPathPoint
      */
     private void createComputedPathPoints(int count, AbstractPathPoint lastPathPoint, AbstractPathPoint currentPathPoint, 
-            JSONArray points, JSONArray activeState) {
+            JSONArray points, JSONArray activeState, State curState) {
         
         if (count ==0) return;
         if (debug_path)
@@ -1254,7 +1271,7 @@ public class ModelVisualizationJson extends JSONObject {
         
         for (int i = 0; i < count; i++) {
             double ratio = (1.0 + i) / (count + 1.0);
-            Vec3 location = computePointLocationFromNeighbors(lastPathPoint, mapBodyIndicesToFrames.get(0), currentPathPoint, ratio);
+            Vec3 location = computePointLocationFromNeighbors(lastPathPoint, getMapBodyIndicesToFrames().get(0), currentPathPoint, ratio, curState);
             JSONObject bpptInBodyJson =createPathPointObjectJson(null, false, location, matuuid.toString(), false);
             UUID ppt_uuid = retrieveUuidFromJson(bpptInBodyJson);
             computedPathPoints.put(ppt_uuid, new ComputedPathPointInfo(lastPathPoint, currentPathPoint, NEAR_END));
@@ -1309,7 +1326,7 @@ public class ModelVisualizationJson extends JSONObject {
             topMsg.put("command",msgMulti);
             msgMulti.put("type", "MultiCmdsCommand");
             JSONArray commands = new JSONArray();
-            ArrayList<UUID> uuids = mapComponentToUUID.get(comp);
+            ArrayList<UUID> uuids = getMapComponentToUUID().get(comp);
             String geomId = comp.getAbsolutePathString();
             for (int i=0; i < uuids.size(); i++){
                 DecorativeGeometry dg = adg.getElt(i);
@@ -1332,7 +1349,7 @@ public class ModelVisualizationJson extends JSONObject {
     }
    
     public Boolean componentHasVisuals(Component comp){
-        ArrayList<UUID> uuids = mapComponentToUUID.get(comp);
+        ArrayList<UUID> uuids = getMapComponentToUUID().get(comp);
         // Component has no visible representation, pass
         return (uuids != null && uuids.size() > 0);
 
@@ -1341,11 +1358,11 @@ public class ModelVisualizationJson extends JSONObject {
     public void deletePathPointVisuals(GeometryPath currentPath, int index) {
         boolean hasWrapping = currentPath.getWrapSet().getSize()>0;
         AbstractPathPoint appoint = currentPath.getPathPointSet().get(index);
-        ArrayList<UUID> uuids = mapComponentToUUID.get(appoint);
+        ArrayList<UUID> uuids = getMapComponentToUUID().get(appoint);
         // Remove uuids[0] from visualizer
         UUID appoint_uuid = uuids.get(0);
         // cleanup maps
-        mapComponentToUUID.remove(appoint);
+        getMapComponentToUUID().remove(appoint);
         mapUUIDToComponent.remove(appoint_uuid);
         // If Conditional remove it from proxyPathPoints
         if (ConditionalPathPoint.safeDownCast(appoint)!= null)
@@ -1385,7 +1402,7 @@ public class ModelVisualizationJson extends JSONObject {
     public UUID getFirstPathPointUUID4GeometryPath(GeometryPath geometryPath) {
         
         AbstractPathPoint ppt = geometryPath.getPathPointSet().get(0);
-        return mapComponentToUUID.get(ppt).get(0);
+        return getMapComponentToUUID().get(ppt).get(0);
     }
     /**
      * Whatever GUI operation resulting in Commands for visualizer, these need to be
@@ -1407,7 +1424,7 @@ public class ModelVisualizationJson extends JSONObject {
         else {
             JSONObject pathpointCommand = (JSONObject) lastCommand.clone();
             if (force.hasVisualPath()){
-                GeometryPath gPath = GeometryPath.safeDownCast(force.getPropertyByName("GeometryPath").getValueAsObject());
+                GeometryPath gPath = GeometryPath.safeDownCast(force.getPropertyByName("path").getValueAsObject());
 
                 pathpointCommand.put("objectUuid", getFirstPathPointUUID4GeometryPath(gPath).toString());
                 commands.add(pathpointCommand);
@@ -1469,8 +1486,8 @@ public class ModelVisualizationJson extends JSONObject {
     private final HashMap<OpenSimObject, UUID> mapGeometryPathToPathPointMaterialUUID = 
                         new HashMap<OpenSimObject, UUID>();
     
-    private void updatePathWithWrapping(GeometryPath path, JSONArray bodyTransforms) {
-        ArrayPathPoint actualPath =path.getCurrentPath(state);
+    private void updatePathWithWrapping(GeometryPath path, JSONArray bodyTransforms, State curState) {
+        ArrayPathPoint actualPath =path.getCurrentPath(curState);
         JSONArray pathpointJsonArray = pathsWithWrapping.get(path);
         int numWrapObjects = path.getWrapSet().getSize();
         PathPointSet pathPointSetFromProperty = path.getPathPointSet();
@@ -1490,7 +1507,7 @@ public class ModelVisualizationJson extends JSONObject {
              }
             else if (secondIndex == -1){ // Conditional Path point that's inactive
                 int tempIndex = ppointSetIndex;
-                while (!pathPointSetFromProperty.get(tempIndex).isActive(state))
+                while (!pathPointSetFromProperty.get(tempIndex).isActive(curState))
                     tempIndex--;
                 secondPoint = pathPointSetFromProperty.get(tempIndex);
                 secondIndex = tempIndex;
@@ -1502,7 +1519,7 @@ public class ModelVisualizationJson extends JSONObject {
 
                 ArrayList<Integer> pointCount = new  ArrayList<Integer>(numWrapPoints);
                 ArrayList<Integer> visPointCount = new  ArrayList<Integer>(numWrapPoints);
-                calculateWrapPointsToVisualzerPointsMapping(firstIndex, secondIndex, actualPath, pointCount, numIntermediatePoints, visPointCount);
+                calculateWrapPointsToVisualzerPointsMapping(firstIndex, secondIndex, actualPath, pointCount, numIntermediatePoints, visPointCount, curState);
                 int startVisualizerPointIndex = pathVisInfo.getStartVisualizerPointIndexForSegment(segmentNumber);
                 // Reset all intermediate points to computed position in case wrap was disengaged, they will be updated below
                 for (int wrappointIndex = firstIndex + 1; wrappointIndex < secondIndex; wrappointIndex++) {
@@ -1511,7 +1528,7 @@ public class ModelVisualizationJson extends JSONObject {
                     if (pathWrapPoint != null) {
                         // Count how many wrap points in sequence and distribute 2 * numWrapObjects among them 
                         // for now we'll assume only one
-                        ArrayVec3 pathwrap = pathWrapPoint.getWrapPath(state);
+                        ArrayVec3 pathwrap = pathWrapPoint.getWrapPath(curState);
                         PhysicalFrame wrapPtsFrame = pathWrapPoint.getParentFrame();
                         int size = pathwrap.size();
                         int numVisPoints = visPointCount.get(wrappointIndex-firstIndex-1);
@@ -1524,14 +1541,28 @@ public class ModelVisualizationJson extends JSONObject {
                             indicesToUse[numVisPoints-1]=size-1;
                             JSONObject bodyJson = mapBodyIndicesToJson.get(0); // These points live in Ground
                             for (int j = 0; j < indicesToUse.length; j++) {
-                                Vec3 globalLocation = wrapPtsFrame.findStationLocationInAnotherFrame(state, pathwrap.get(indicesToUse[j]), mapBodyIndicesToFrames.get(0));
+                                Vec3 globalLocation = wrapPtsFrame.findStationLocationInAnotherFrame(curState, pathwrap.get(indicesToUse[j]), getMapBodyIndicesToFrames().get(0));
                                 // Update location from wrapping
-                                JSONObject oneBodyXform_json = new JSONObject();
-                                oneBodyXform_json.put("uuid", pathpointJsonArray.get(startVisualizerPointIndex+j).toString());
-                                Transform xform = new Transform();
-                                xform.setP(globalLocation);
-                                oneBodyXform_json.put("matrix", JSONUtilities.createMatrixFromTransform(xform, new Vec3(1., 1., 1.), visScaleFactor));
-                                bodyTransforms.add(oneBodyXform_json);
+                                String uuidString = pathpointJsonArray.get(startVisualizerPointIndex+j).toString();
+                                if (bodyTransforms != null){
+                                    JSONObject oneBodyXform_json = new JSONObject();
+                                    oneBodyXform_json.put("uuid", uuidString);
+                                    Transform xform = new Transform();
+                                    xform.setP(globalLocation);
+                                    oneBodyXform_json.put("matrix", JSONUtilities.createMatrixFromTransform(xform, new Vec3(1., 1., 1.), getVisScaleFactor()));
+                                    bodyTransforms.add(oneBodyXform_json);
+                                }
+                                else { // We're creating an animation track
+                                    if (mapUUIDToAnimationTrack.containsKey(uuidString)){
+                                        for(int c =0; c <3; c++)
+                                            mapUUIDToAnimationTrack.get(uuidString).add(globalLocation.get(c));
+                                    }
+                                    else {
+                                        mapUUIDToAnimationTrack.put(uuidString, new ArrayList<Double>());
+                                        for(int c =0; c <3; c++)
+                                            mapUUIDToAnimationTrack.get(uuidString).add(globalLocation.get(c));
+                                    }
+                                }
                             }
                             startVisualizerPointIndex += numVisPoints;
                         }
@@ -1571,7 +1602,7 @@ public class ModelVisualizationJson extends JSONObject {
                 bodyJson.put("children", new JSONArray());
                 children = (JSONArray)bodyJson.get("children");
         }
-        Vec3 computedLocation = computePathPointLocation(index, pathpointSet);
+        Vec3 computedLocation = computePathPointLocation(index, pathpointSet, state);
         JSONObject bpptInBodyJson = createPathPointObjectJson(pathPoint, false, computedLocation, material_uuid, visible);
         children.add(bpptInBodyJson);
         return retrieveUuidFromJson(bpptInBodyJson);
@@ -1590,11 +1621,11 @@ public class ModelVisualizationJson extends JSONObject {
         bpptInBodyJson.put("type", "Mesh");
         String name = "";
         if (pathPoint!= null){
-            bpptInBodyJson.put("opensimType", pathPoint.getConcreteClassName());
+            bpptInBodyJson.put("userData",JSONUtilities.createUserDataObject(pathPoint.getConcreteClassName(), false));
             name = pathPoint.getName();
         }
         else
-            bpptInBodyJson.put("opensimType", "ComputedPathPoint");
+            bpptInBodyJson.put("userData",JSONUtilities.createUserDataObject("ComputedPathPoint", false));
         bpptInBodyJson.put("name", name);
         bpptInBodyJson.put("geometry", bpptGeometryJson.get("uuid"));
         bpptInBodyJson.put("material", materialUuidString);
@@ -1602,11 +1633,19 @@ public class ModelVisualizationJson extends JSONObject {
         Transform localTransform = new Transform();
         if (active && pathPoint!= null){
             Vec3 location = pathPoint.getLocation(state);
-            localTransform.setP(location);
+            Frame parentFrame = pathPoint.getParentFrame();
+            Frame baseFrame = parentFrame.findBaseFrame();
+            if (baseFrame.equals(parentFrame))
+                localTransform.setP(location);
+            else {
+                // transform location to baseFrame as the scene graph for visualization uses it for mobodyindex
+                Vec3 locationInBaseFrame = parentFrame.findStationLocationInAnotherFrame(state, location, baseFrame);
+                localTransform.setP(locationInBaseFrame);
+            }
         }
         else
             localTransform.setP(computedLocation);
-        bpptInBodyJson.put("matrix", JSONUtilities.createMatrixFromTransform(localTransform, new Vec3(1.0), visScaleFactor));
+        bpptInBodyJson.put("matrix", JSONUtilities.createMatrixFromTransform(localTransform, new Vec3(1.0), getVisScaleFactor()));
         //bpptInBodyJson.put("visible", visible);
         bpptInBodyJson.put("visible", visible);
         return bpptInBodyJson;
@@ -1629,18 +1668,6 @@ public class ModelVisualizationJson extends JSONObject {
     private UUID createJsonForGeometryPath(GeometryPath path, boolean visible, UUID reuse_uuid) {
         UUID mat_uuid = createPathMaterial(path);
         UUID pathpt_mat_uuid = createPathPointMaterial(path);
-        
-        // Create plain Geometry with vertices at PathPoints it will have 0 vertices
-        // but will be populated live in the visualizer from the Pathppoints
-        JSONObject pathGeomJson = new JSONObject();
-        UUID uuidForPathGeomGeometry = UUID.randomUUID();
-        pathGeomJson.put("uuid", uuidForPathGeomGeometry.toString());
-        pathGeomJson.put("type", "PathGeometry");
-        pathGeomJson.put("radius", actualMuscleDisplayRadius);
-        pathGeomJson.put("name", path.getAbsolutePathString()+"Control");
-        if (reuse_uuid == null) {
-            json_geometries.add(pathGeomJson);
-        }
         
         // create PathVisualiztionInfo object for the Path for book-keeping, primarily used by wrapping
         PathVisualizationInfo pathVisInfo = new PathVisualizationInfo(path);
@@ -1690,21 +1717,21 @@ public class ModelVisualizationJson extends JSONObject {
                 // create numIntermediatePoints between currentPoint and secondPoint
                 if (numIntermediatePoints>0)
                     pathVisInfo.setStartVisualizerPointIndexForSegment(segmentNumber, pathpoint_jsonArr.size() );
-                createComputedPathPoints(numIntermediatePoints, firstPoint, secondPoint, pathpoint_jsonArr, pathpointActive_jsonArr);
+                createComputedPathPoints(numIntermediatePoints, firstPoint, secondPoint, pathpoint_jsonArr, pathpointActive_jsonArr, state);
             }
             else if (secondIndex == -1){ // Conditional Path point that's inactive
                 ConditionalPathPoint cpp = ConditionalPathPoint.safeDownCast(secondPoint);
                 // instead of secondPoint move dow to first Active poit
                 if (numIntermediatePoints>0)
                     pathVisInfo.setStartVisualizerPointIndexForSegment(segmentNumber, pathpoint_jsonArr.size());
-                createComputedPathPoints(numIntermediatePoints, firstPoint, secondPoint, pathpoint_jsonArr, pathpointActive_jsonArr);
+                createComputedPathPoints(numIntermediatePoints, firstPoint, secondPoint, pathpoint_jsonArr, pathpointActive_jsonArr, state);
                 
                 pathpoint_uuid = addComputedPathPointObjectToParent(ppointSetIndex, pathPointSetFromProperty, pathpt_mat_uuid.toString(), 
                         visible);
                 pointAdded = true;
                 ArrayList<UUID> comp_uuids = new ArrayList<UUID>();
                 comp_uuids.add(pathpoint_uuid);
-                mapComponentToUUID.put(cpp, comp_uuids);
+                getMapComponentToUUID().put(cpp, comp_uuids);
                 mapUUIDToComponent.put(pathpoint_uuid, cpp);                
                 pathpointActive_jsonArr.add(false);
                 pathpoint_jsonArr.add(pathpoint_uuid.toString());
@@ -1717,7 +1744,7 @@ public class ModelVisualizationJson extends JSONObject {
                 }
                 ArrayList<Integer> pointCount = new  ArrayList<Integer>(numWrapPoints);
                 ArrayList<Integer> visPointCount = new  ArrayList<Integer>(numWrapPoints);
-                calculateWrapPointsToVisualzerPointsMapping(firstIndex, secondIndex, actualPath, pointCount, numIntermediatePoints, visPointCount);
+                calculateWrapPointsToVisualzerPointsMapping(firstIndex, secondIndex, actualPath, pointCount, numIntermediatePoints, visPointCount, state);
                 pathVisInfo.setStartVisualizerPointIndexForSegment(segmentNumber, pathpoint_jsonArr.size());
                 // From here on we use numIntermediatePoints viz-points to represent totalCount positions
                 for (int wrappointIndex = firstIndex + 1; wrappointIndex < secondIndex; wrappointIndex++) {
@@ -1739,7 +1766,7 @@ public class ModelVisualizationJson extends JSONObject {
                             JSONObject bodyJson = mapBodyIndicesToJson.get(0); // These points live in Ground
                             JSONArray children = (JSONArray) bodyJson.get("children");
                             for (int j = 0; j < indicesToUse.length; j++) {
-                                Vec3 globalLocation = wrapPtsFrame.findStationLocationInAnotherFrame(state, pathwrap.get(indicesToUse[j]), mapBodyIndicesToFrames.get(0));
+                                Vec3 globalLocation = wrapPtsFrame.findStationLocationInAnotherFrame(state, pathwrap.get(indicesToUse[j]), getMapBodyIndicesToFrames().get(0));
                                 JSONObject bpptInBodyJson = createPathPointObjectJson(null, false, globalLocation, pathpt_mat_uuid.toString(), false);
                                 UUID ppt_uuid = retrieveUuidFromJson(bpptInBodyJson);
                                 children.add(bpptInBodyJson);
@@ -1777,7 +1804,25 @@ public class ModelVisualizationJson extends JSONObject {
         if (hasWrapping)
             pathsWithWrapping.put(path, pathpoint_jsonArr);
 
-        pathGeomJson.put("segments", pathpoint_jsonArr.size()-1); 
+        // Create plain Geometry with vertices at PathPoints it will have 0 vertices
+        // but will be populated live in the visualizer from the Pathppoints
+        JSONObject pathGeomJson = new JSONObject();
+        UUID uuidForPathGeomGeometry = UUID.randomUUID();
+        pathGeomJson.put("uuid", uuidForPathGeomGeometry.toString());
+        pathGeomJson.put("type", "CylinderGeometry");
+        pathGeomJson.put("radiusTop", actualMuscleDisplayRadius);
+        pathGeomJson.put("radiusBottom", actualMuscleDisplayRadius);
+        pathGeomJson.put("height", 0.01);
+        pathGeomJson.put("radialSegments", 4);
+        pathGeomJson.put("heightSegments", 2*(pathpoint_jsonArr.size()-1)-1);
+        pathGeomJson.put("openEnded", true);
+        // height, radialSegments, heightSegments, openended
+        pathGeomJson.put("name", path.getOwner().getName()+"Control");
+        if (reuse_uuid == null) {
+            json_geometries.add(pathGeomJson);
+        }
+
+        //pathGeomJson.put("segments", pathpoint_jsonArr.size()-1); 
         JSONObject gndJson = mapBodyIndicesToJson.get(0);
         if (gndJson.get("children")==null)
                 gndJson.put("children", new JSONArray());
@@ -1786,11 +1831,11 @@ public class ModelVisualizationJson extends JSONObject {
         UUID mesh_uuid = (reuse_uuid==null)? UUID.randomUUID(): reuse_uuid;
         obj_json.put("uuid", mesh_uuid.toString());
         obj_json.put("type", "GeometryPath");
-        obj_json.put("name", path.getAbsolutePathString());
+        obj_json.put("name", path.getOwner().getName());
         obj_json.put("points", pathpoint_jsonArr);
         obj_json.put("active", pathpointActive_jsonArr);
         obj_json.put("geometry", uuidForPathGeomGeometry.toString());
-        obj_json.put("opensimType", "Path");
+        obj_json.put("userData",JSONUtilities.createUserDataObject("Path", false));
         gndChildren.add(obj_json);
         // Create json entry for material (path_material) and set skinning to true
         obj_json.put("material", mat_uuid.toString());
@@ -1824,14 +1869,14 @@ public class ModelVisualizationJson extends JSONObject {
         return mat_uuid;
     }
 
-    private void calculateWrapPointsToVisualzerPointsMapping(int firstIndex, int secondIndex, ArrayPathPoint actualPath, ArrayList<Integer> pointCount, int numIntermediatePoints, ArrayList<Integer> visPointCount) {
+    private void calculateWrapPointsToVisualzerPointsMapping(int firstIndex, int secondIndex, ArrayPathPoint actualPath, ArrayList<Integer> pointCount, int numIntermediatePoints, ArrayList<Integer> visPointCount, State curState) {
         int relIndex=0;
         int totalCount = 0;
         for (int wrappointIndex = firstIndex + 1; wrappointIndex < secondIndex; wrappointIndex++) {
             PathWrapPoint pathWrapPoint = PathWrapPoint.safeDownCast(actualPath.get(wrappointIndex));
             pointCount.add(relIndex, 0);
             if ((pathWrapPoint != null)){
-                int nextCount = pathWrapPoint.getWrapPath(state).getSize();
+                int nextCount = pathWrapPoint.getWrapPath(curState).getSize();
                 pointCount.set(relIndex, nextCount);
                 totalCount += nextCount;
             }
@@ -1853,12 +1898,12 @@ public class ModelVisualizationJson extends JSONObject {
     }
 
     private void populatePathMaterialDefaults(Map<String, Object> mat_json, GeometryPath path) {
-        mat_json.put("type", "MeshPhongMaterial");
+        mat_json.put("type", "MeshStandardMaterial");
         Vec3 pathColor = path.getDefaultColor();
         String colorString = JSONUtilities.mapColorToRGBA(pathColor);
         mat_json.put("color", colorString);
         mat_json.put("side", 2);
-        mat_json.put("transparent", true);
+        mat_json.put("transparent", false);
     }
     // Export Path in Json format to visualizer, as of now 
     // only supports Stationary PathPoints
@@ -1880,9 +1925,9 @@ public class ModelVisualizationJson extends JSONObject {
                 pathpoint_jsonArr = new JSONArray();
                 for (int i = 0; i < path.getPathPointSet().getSize(); i++) {
                     AbstractPathPoint pathPoint = path.getPathPointSet().get(i);
-                    ArrayList<UUID> vis_uuidList = mapComponentToUUID.get(pathPoint);
+                    ArrayList<UUID> vis_uuidList = getMapComponentToUUID().get(pathPoint);
                     if (vis_uuidList != null) { // If point is being deleted, it's removed from map first
-                        UUID pathpoint_uuid = mapComponentToUUID.get(pathPoint).get(0);
+                        UUID pathpoint_uuid = getMapComponentToUUID().get(pathPoint).get(0);
                         pathpoint_jsonArr.add(pathpoint_uuid.toString());
                     }
                 }
@@ -1898,7 +1943,7 @@ public class ModelVisualizationJson extends JSONObject {
             topJson.put("SubOperation", "insert");
             AbstractPathPoint newPoint = path.getPathPointSet().get(atIndex);
             JSONObject newPointJson = createPathPointObjectJson(newPoint, true, null, pathpointMatUUID.toString(), true);
-            newPointJson.put("parent_uuid", mapComponentToUUID.get(newPoint.getBody()).get(0).toString());
+            newPointJson.put("parent_uuid", getMapComponentToUUID().get(newPoint.getBody()).get(0).toString());
             topJson.put("NewPoint", newPointJson);
             // Add new point to maps
             UUID newPointMeshUUID = retrieveUuidFromJson(newPointJson);
@@ -1906,7 +1951,7 @@ public class ModelVisualizationJson extends JSONObject {
             JSONArray pathpoint_jsonArr = new JSONArray();
             for (int i = 0; i < path.getPathPointSet().getSize(); i++) {
                 AbstractPathPoint pathPoint = path.getPathPointSet().get(i);
-                UUID pathpoint_uuid = mapComponentToUUID.get(pathPoint).get(0);
+                UUID pathpoint_uuid = getMapComponentToUUID().get(pathPoint).get(0);
                 pathpoint_jsonArr.add(pathpoint_uuid.toString());
             }
             topJson.put("points", pathpoint_jsonArr);
@@ -1918,7 +1963,7 @@ public class ModelVisualizationJson extends JSONObject {
             for (int i = 0; i < path.getPathPointSet().getSize(); i++) {
                 AbstractPathPoint pathPoint = path.getPathPointSet().get(i);
                 JSONObject pathpointupdateJson = new JSONObject();
-                UUID pathpoint_uuid = mapComponentToUUID.get(pathPoint).get(0);
+                UUID pathpoint_uuid = getMapComponentToUUID().get(pathPoint).get(0);
                 pathpointupdateJson.put("uuid", pathpoint_uuid.toString());
                 Transform localTransform = new Transform();
                 Vec3 location = null;
@@ -1929,7 +1974,7 @@ public class ModelVisualizationJson extends JSONObject {
                     //location = proxyPathPoint.getBody().findStationLocationInAnotherFrame(state, proxyLocationInParent, bodyFrame);
                 }
                 localTransform.setP(location);
-                pathpointupdateJson.put("matrix", JSONUtilities.createMatrixFromTransform(localTransform, new Vec3(1.0), visScaleFactor));
+                pathpointupdateJson.put("matrix", JSONUtilities.createMatrixFromTransform(localTransform, new Vec3(1.0), getVisScaleFactor()));
                 pathpoint_jsonArr.add(pathpointupdateJson);
             }
             topJson.put("points", pathpoint_jsonArr);
@@ -1954,10 +1999,10 @@ public class ModelVisualizationJson extends JSONObject {
         PathPointSet currentPathPoints = currentPath.getPathPointSet();
         for (int i=0; i< currentPathPoints.getSize(); i++){
             AbstractPathPoint appt = currentPathPoints.get(i);
-            UUID pathpointUuid = mapComponentToUUID.get(appt).get(0);
+            UUID pathpointUuid = getMapComponentToUUID().get(appt).get(0);
             uuidList.add(pathpointUuid);
             // Also remove appt from various maps
-            mapComponentToUUID.remove(appt);
+            getMapComponentToUUID().remove(appt);
             mapUUIDToComponent.remove(pathpointUuid);
             // remove computed points that depend on appt
             if (MovingPathPoint.safeDownCast(appt) != null) {
@@ -1992,6 +2037,318 @@ public class ModelVisualizationJson extends JSONObject {
     }
     public void setPathPointDisplayStatus(GeometryPath musclePath, boolean newState){
         pathDisplayStatus.put(musclePath, newState);
+    }
+
+    /**
+     * @return the mapBodyIndicesToFrames
+     */
+    public HashMap<Integer, PhysicalFrame> getMapBodyIndicesToFrames() {
+        return mapBodyIndicesToFrames;
+    }
+
+    /**
+     * @return the mapComponentToUUID
+     */
+    public HashMap<OpenSimObject, ArrayList<UUID>> getMapComponentToUUID() {
+        return mapComponentToUUID;
+    }
+    
+    public AnimationJson createAnimationJson(Storage mot, MuscleColoringFunction coloringFunction) {
+     AnimationJson animationClipJson = new AnimationJson();
+     animationClipJson.put("name", mot.getName());
+     JSONArray animationsTracks = new JSONArray();
+     animationClipJson.put("tracks", animationsTracks);
+     // unlock all coordinates as motion may have been generated with them unlocked
+     CoordinateSet coords = model.getCoordinateSet();
+     ArrayList<Boolean> saveCoordLocks = new ArrayList<Boolean>();
+     for(int i=0; i<coords.getSize(); i++){
+         Coordinate coord = coords.get(i);
+         saveCoordLocks.add(coord.getDefaultLocked());
+         coord.setDefaultLocked(false);
+      }
+     // Convert mot into a StateTrajectory so that we can get states one at a time;
+     // create a local Storage and use that to rearrange data for animation
+     Storage motionAsStates = new Storage();
+     //dContext.resetStateToDefault(); // TODO revisit fix #279
+     model.formStateStorage(mot, motionAsStates, false);
+     //motionAsStates.print("motionAsStates.sto");
+     
+     StatesTrajectory trajectory = StatesTrajectory.createFromStatesStorage(model, motionAsStates, true, true);
+
+     HashMap<Integer, PhysicalFrame> mapIndexToFrame = getMapBodyIndicesToFrames();
+     int numFrames = mapIndexToFrame.size()-1; // Exclude ground as not moving
+     Frame[] frames = new Frame[numFrames];
+     for (int iFrame=0; iFrame< numFrames; iFrame++){
+         frames[iFrame]=mapIndexToFrame.get(iFrame+1);
+     }
+     double[] times = new double[mot.getSize()];
+     double[][] translationData = new double[numFrames][mot.getSize()*3];
+     double[][] rotationData = new double[numFrames][mot.getSize()*4];
+     double[] comData = new double[mot.getSize()*3];
+     AbstractOutput output = model.getOutput("com_position");
+     OutputVec3 outputVec3 = OutputVec3.safeDownCast(output);
+
+     int numMovingPathpoints = movingComponents.keySet().size();
+     double[][] movingPathPointData = new double[numMovingPathpoints][mot.getSize()*3];
+     int numConditionalPathpoints = proxyPathPoints.keySet().size();
+     double[][] conditionalPathPointData = new double[numConditionalPathpoints][mot.getSize()*3];
+
+     int numComputedPathpoints = computedPathPoints.keySet().size();
+     double[][] computedPathPointData = new double[numComputedPathpoints][mot.getSize()*3];
+     
+     int numPaths = pathList.size();
+     GeometryPath[] pathsArray = new GeometryPath[numPaths];
+     double[][] colorData = new double[numPaths][mot.getSize()*3];
+     mapUUIDToAnimationTrack = new HashMap<>();
+     
+     for (int iState = 0; iState < times.length; iState++) {
+        State nextState = trajectory.get(iState);
+        times[iState] = nextState.getTime();
+        model.realizeDynamics(nextState);
+        // Handle frames, collect position and quaternions separately for separate tracks
+        for (int iFrame = 0; iFrame < numFrames; iFrame++) {
+            // Get transform for Frame iFrame, convert into pos, quaternion then append to tracks.
+            Transform xform = frames[iFrame].getTransformInGround(nextState);
+            Vec3 translation = xform.T();
+            addEntriesToDataArray(translationData[iFrame], iState, translation);
+            Rotation rot = xform.R();
+            Quaternion quat = rot.convertRotationToQuaternion();
+            rotationData[iFrame][iState * 4 + 3] = quat.get(0);
+            for (int c = 0; c < 3; c++) {
+                rotationData[iFrame][iState * 4 + c] = quat.get(c + 1);
+            }
+        }
+        // COM handling
+        Vec3 comPos = outputVec3.getValue(nextState);
+        addEntriesToDataArray(comData, iState, comPos);
+
+        // Now muscle colors
+        Set<GeometryPath> paths = pathList.keySet();
+        Iterator<GeometryPath> pathIter = paths.iterator();
+        int pathIndex = 0;
+        while (pathIter.hasNext()) {
+            GeometryPath path = pathIter.next();
+            pathsArray[pathIndex] = path;
+            Vec3 pathColor;
+            if (coloringFunction==null){
+                pathColor = currentPathColorMap.getColor(path, nextState, -1);
+            }
+            else {
+                double newColorInBlueToRed = coloringFunction.getColor(Muscle.safeDownCast(path.getOwner()), nextState);
+                pathColor = currentPathColorMap.getColor(path, nextState, newColorInBlueToRed);
+            }
+            if (verbose)
+                System.out.println("Color:" + path.getOwner().getName() + "=" + pathColor.toString());
+
+            for (int c=0; c<3; c++)
+                colorData[pathIndex][iState*3+c] = pathColor.get(c);
+            pathIndex++;
+        }
+        // Handle moving path points
+        int mppIndex = 0;
+        for (Component comp : movingComponents.keySet()) {
+            // Update position of MovingPathpoints on each frame
+            MovingPathPoint mPathPoint = MovingPathPoint.safeDownCast(comp);
+            Vec3 location = mPathPoint.getLocation(nextState);
+            addEntriesToDataArray(movingPathPointData[mppIndex], iState, location);
+            mppIndex++;
+        };
+        // Handle proxyPoints 
+        int proxyIndex = 0;
+        for (AbstractPathPoint app : proxyPathPoints.keySet()) {
+            if (!app.isActive(nextState)) {
+                ComputedPathPointInfo proxyPointInfo = proxyPathPoints.get(app);
+                Vec3 loc = computePointLocationFromNeighbors(proxyPointInfo.pt1, app.getBody(), proxyPointInfo.pt2, proxyPointInfo.ratio, nextState);
+                addEntriesToDataArray(conditionalPathPointData[proxyIndex], iState, loc);
+            } else {
+                if (debug_path) {
+                    System.out.println("Pathpoint " + app.getName() + " active");
+                }
+                Vec3 location = app.getLocation(nextState);
+                addEntriesToDataArray(conditionalPathPointData[proxyIndex], iState, location);
+            }
+            proxyIndex++;
+        }
+        // Computed path points (wrapping points not engaged
+        PhysicalFrame ground = getMapBodyIndicesToFrames().get(0);
+        int computedIndex = 0;
+        // RECOMPUTE POINTS AS NO WRAPPING, points close to one end
+//        for (UUID computedPointUUID : computedPathPoints.keySet()) {
+//            ComputedPathPointInfo computedPointInfo = computedPathPoints.get(computedPointUUID);
+//            Vec3 loc = computePointLocationFromNeighbors(computedPointInfo.pt1, ground, computedPointInfo.pt2, computedPointInfo.ratio);
+//            addEntriesToDataArray(computedPathPointData[computedIndex], iState, loc);
+//            computedIndex++;
+//        }
+        // Wrapping points
+        if (!pathsWithWrapping.isEmpty()){
+            // Update status of Wrappoints accordingly
+            int expectedLength = (iState+1)*3;
+            for (GeometryPath path:pathsWithWrapping.keySet()){
+                updatePathWithWrapping(path, null, nextState);
+                // if there're points in pathsWithWrapping.value that didn't get an update
+                // grab values for them from the computedPathPointData
+                JSONArray pathpoint_jsonArr = pathsWithWrapping.get(path);
+                for (int pptIdx=0; pptIdx<pathpoint_jsonArr.size(); pptIdx++){
+                    String pointUUIDString = (String) pathpoint_jsonArr.get(pptIdx);
+                    UUID ppt_uuid = UUID.fromString(pointUUIDString);
+                    // If not potentially computed, skip over it's accounted for elsewhere
+                    if (computedPathPoints.containsKey(ppt_uuid)){
+                        ArrayList<Double> track = mapUUIDToAnimationTrack.get(ppt_uuid.toString());
+                        if (track == null){
+                            mapUUIDToAnimationTrack.put(ppt_uuid.toString(), new ArrayList<Double>());
+                            track = mapUUIDToAnimationTrack.get(ppt_uuid.toString());
+                        }
+                        if (track.size()!=expectedLength){
+                            // Copy values or recompute and append
+                            ComputedPathPointInfo computedPointInfo = computedPathPoints.get(ppt_uuid);
+                            //System.out.println("Fix track for computedpt between "+computedPointInfo.pt1.getName()+"---"+computedPointInfo.pt2.getName());
+                            Vec3 loc = computePointLocationFromNeighbors(computedPointInfo.pt1, ground, computedPointInfo.pt2, computedPointInfo.ratio, nextState);
+                            for (int ii=0; ii<3; ii++)
+                                track.add(loc.get(ii));
+                        }
+                    }
+                }
+            }
+        }
+     }
+     // restore coordinate locks in case we changed them to generate clip
+     //
+     for (int iCoord=0; iCoord< model.getCoordinateSet().getSize(); iCoord++){
+         Coordinate coord = coords.get(iCoord);
+         saveCoordLocks.add(coord.getDefaultLocked());
+         coord.setDefaultLocked(saveCoordLocks.get(iCoord));
+     }
+     animationClipJson.put("duration", times[times.length-1]);
+     animationClipJson.put("uuid", UUID.randomUUID().toString());
+     // Create a track for time, translationData, rotationData
+     JSONArray timesData = JSONUtilities.createFromArrayDouble(times);
+     for (int iFrame=0; iFrame< numFrames; iFrame++){
+         JSONObject positionTrack = new JSONObject();
+         String frameName = frames[iFrame].getName();
+         positionTrack.put("name", frameName+".position");
+         positionTrack.put("type", "vector");
+         positionTrack.put("times", timesData);
+         positionTrack.put("values", JSONUtilities.createFromArrayDouble(translationData[iFrame]));
+         //animationTrack.put("interpolation", "Linear");
+         animationsTracks.add(positionTrack);
+         if (verbose)
+            System.out.println("Name, Sizes: "+frameName+".position"+" | "+timesData.size()+" "+
+                    JSONUtilities.createFromArrayDouble(translationData[iFrame]).size()+"\n");
+
+         JSONObject orientationTrack = new JSONObject();
+         orientationTrack.put("name", frameName+".quaternion");
+         orientationTrack.put("type", "quaternion");
+         orientationTrack.put("times", timesData);
+         orientationTrack.put("values", JSONUtilities.createFromArrayDouble(rotationData[iFrame]));
+         //animationTrack.put("interpolation", "Linear");
+         animationsTracks.add(orientationTrack);
+     }
+     
+     JSONObject comTrack = new JSONObject();
+     comTrack.put("name", "ModelCom.position");
+     comTrack.put("type", "vector");
+     comTrack.put("times", timesData);
+     comTrack.put("values", JSONUtilities.createFromArrayDouble(comData));
+     //animationTrack.put("interpolation", "Linear");
+     animationsTracks.add(comTrack);
+     // Moving path points
+     int mppIndex=0;
+     for (Component comp: movingComponents.keySet()){
+         JSONObject positionTrack = new JSONObject();
+         String frameName = comp.getName();
+         positionTrack.put("name", frameName+".position");
+         positionTrack.put("type", "vector");
+         positionTrack.put("times", timesData);
+         positionTrack.put("values", JSONUtilities.createFromArrayDouble(movingPathPointData[mppIndex]));
+         //animationTrack.put("interpolation", "Linear");
+         animationsTracks.add(positionTrack);
+         mppIndex++;
+     }
+     // Conditional path points
+     int proxyIndex=0;
+     for (AbstractPathPoint app: proxyPathPoints.keySet()){
+         JSONObject positionTrack = new JSONObject();
+         String frameName = app.getName();
+         positionTrack.put("name", frameName+".position");
+         positionTrack.put("type", "vector");
+         positionTrack.put("times", timesData);
+         positionTrack.put("values", JSONUtilities.createFromArrayDouble(conditionalPathPointData[proxyIndex]));
+         //animationTrack.put("interpolation", "Linear");
+         animationsTracks.add(positionTrack);
+         proxyIndex++;
+     }
+
+     // 
+     // Every path has 2 tracks for now containing only color, but eventually for Moving, Conditional and WrapPts
+     for (int p=0; p < numPaths; p++) {
+         String pathName = pathsArray[p].getPathPointSet().get(0).getName();
+         JSONObject pathPointsColorTrack = new JSONObject();
+         pathPointsColorTrack.put("name", pathName+".material.color");
+         pathPointsColorTrack.put("type", "color");
+         pathPointsColorTrack.put("times", JSONUtilities.createFromArrayDouble(times));
+         pathPointsColorTrack.put("values", JSONUtilities.createFromArrayDouble(colorData[p]));
+         
+         if (verbose)
+               System.out.println("Color: RGB"+pathsArray[p].getOwner().getName()+"="+colorData[p][0]+":"+colorData[p][1]+":"+colorData[p][2]);
+
+         //colorTrack.put("interpolation", "Linear");
+         animationsTracks.add(pathPointsColorTrack);
+         String bellyName = pathsArray[p].getOwner().getName();
+         JSONObject muscleColorTrack = new JSONObject();
+         muscleColorTrack.put("name", bellyName+".material.color");
+         muscleColorTrack.put("type", "color");
+         muscleColorTrack.put("times", JSONUtilities.createFromArrayDouble(times));
+         muscleColorTrack.put("values", JSONUtilities.createFromArrayDouble(colorData[p]));
+         //colorTrack.put("interpolation", "Linear");
+         animationsTracks.add(muscleColorTrack);
+     }
+     
+        if (!pathsWithWrapping.isEmpty()){
+            for (String pptUUIDString : mapUUIDToAnimationTrack.keySet()){
+                ArrayList<Double> track = mapUUIDToAnimationTrack.get(pptUUIDString);
+                JSONArray trackJson = new JSONArray();
+                trackJson.addAll(track);
+                JSONObject positionTrack = new JSONObject();
+                String frameName = pptUUIDString;
+                positionTrack.put("name", frameName+".position");
+                positionTrack.put("type", "vector");
+                positionTrack.put("times", timesData);
+                positionTrack.put("values", trackJson);
+                //System.out.println("Wrap point: Name, Sizes: "+frameName+".position"+" | "+timesData.size()+" "+trackJson.size()+"\n");
+                //animationTrack.put("interpolation", "Linear");
+                animationsTracks.add(positionTrack);
+            }
+        }
+        
+        
+        int computedIndex = 0;
+        for (UUID computedPointUUID : computedPathPoints.keySet()) {
+            //System.out.println("computedpoint uuid: "+computedPointUUID.toString());
+            if (!mapUUIDToAnimationTrack.keySet().contains(computedPointUUID.toString())){
+                JSONObject positionTrack = new JSONObject();
+                String frameName = computedPointUUID.toString();
+                positionTrack.put("name", frameName+".position");
+                positionTrack.put("type", "vector");
+                positionTrack.put("times", timesData);
+                positionTrack.put("values", JSONUtilities.createFromArrayDouble(computedPathPointData[computedIndex]));
+                System.out.println("Name, Sizes: "+frameName+".position"+" | "+timesData.size()+" "+
+                        JSONUtilities.createFromArrayDouble(computedPathPointData[computedIndex]).size()+"\n");
+                animationsTracks.add(positionTrack);
+            }
+            computedIndex++;
+        }
+        
+//        try {
+//            JSONUtilities.writeJsonFile(animationClipJson, "animationJson.json");
+//        } catch (IOException ex) {
+//            Exceptions.printStackTrace(ex);
+//        }
+     return animationClipJson;
+ }
+
+    private void addEntriesToDataArray(double[] comData, int iState, Vec3 comPos) {
+        for (int c=0; c<3; c++)
+            comData[iState*3+c] = comPos.get(c);
     }
 
 }

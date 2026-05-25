@@ -43,10 +43,13 @@ import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 import org.openide.nodes.Children;
 import org.openide.nodes.Node;
 import org.opensim.modeling.Model;
 import org.opensim.modeling.Storage;
+import org.opensim.threejs.ModelVisualizationJson;
 import org.opensim.utils.TheApp;
 import org.opensim.view.ExplorerTopComponent;
 import org.opensim.view.motions.MotionEvent.Operation;
@@ -62,64 +65,77 @@ import org.opensim.view.pub.ViewDB;
  */
 public class MotionControlJPanel extends javax.swing.JToolBar 
         implements ChangeListener,  // For motion slider
-                   Observer {       // For MotionsDB
+                   Observer {       
+
+    /**
+     * @return the viewerDrivenPlay
+     */
+    public boolean isViewerDrivenPlay() {
+        return viewerDrivenPlay;
+    }
+
+    /**
+     * @param viewerDrivenPlay the viewerDrivenPlay to set
+     */
+    public void setViewerDrivenPlay(boolean viewerDrivenPlay) {
+        this.viewerDrivenPlay = viewerDrivenPlay;
+    }
+
+// For MotionsDB
    
    Timer               animationTimer=null;
    SpinnerModel        smodel = new SpinnerNumberModel(1.0, 0.0, 10.0, 0.05);
    boolean             motionLoaded=false;
    private MasterMotionModel   masterMotion;
    private int         rangeResolution;
-   private int         timerRate = 30;
    private DecimalFormat timeFormat = new DecimalFormat("0.000");
-
    private boolean internalTrigger=false;
    private static MotionControlJPanel instance=null;
+   private boolean debug = false;
+   private boolean viewerDrivenPlay = false;
+   private boolean isViewerAnimating=false; // debugging only for now
    
    // ActionListener for the timer which is used to play motion forwards/backwards in such a way that
    // advances the model's time based on the real elapsed time (times the factor specified by the smodel spinner)
    private class RealTimePlayActionListener implements ActionListener {
       private boolean firstAction=true;
       private long lastActionTimeNano;
+      private double lastSimulationTime=0.0;
       private int direction;
 
       private double avgCost = 0;
       private int avgCostCount = 0;
-
       public RealTimePlayActionListener(int direction) { this.direction = direction; }
-
+      int frameFPS = ViewDB.getInstance().getFrameRate(); // Fix delta while playing
+      
       public void actionPerformed(ActionEvent evt) {
-         long currentTimeNano = System.nanoTime();
          if(firstAction) {
             firstAction = false;
-            lastActionTimeNano = currentTimeNano;
-            getMasterMotion().advanceTime(0);
+            frameFPS = ViewDB.getInstance().getFrameRate();
+            //if (debug) System.out.println("frameFPS in RealTimePlayActionListener="+frameFPS);
+            ViewDB.getInstance().playCurrentAnimations(getMasterMotion().currentTime, getMasterMotion().getCurrentAnimationUUIDs());
+            //getMasterMotion().advanceTime(0);
+            if (debug) System.out.println("frameFPS"+frameFPS);
          } else {
             double speed = (double)(((Double)smodel.getValue()).doubleValue());
-            double factor = (double)direction*1e-9*speed;
-            //System.out.println("Time since last call "+(currentTimeNano-lastActionTimeNano)+" ns");
-            getMasterMotion().advanceTime(factor*(currentTimeNano-lastActionTimeNano));
-            //System.out.println("             masterMotion current time = "+(masterMotion.getCurrentTime()));
-            lastActionTimeNano = currentTimeNano;
+            //double factor = (double)direction*1e-9*speed;
+            double frameTime = 1.0/frameFPS;
+
+            lastSimulationTime = masterMotion.getCurrentTime();
+
          }
 
          // Kill self if done and wrapMotion is off
          if (getMasterMotion().finished(direction)){
-            //animationTimer.stop();
-            //animationTimer=null;
+            animationTimer.stop();
+            animationTimer=null;
             jStopButtonActionPerformed(evt);
             ViewDB.getInstance().endAnimation();
-            
-         } else {
-            /*
-            double ms=1e-6*(System.nanoTime()-currentTimeNano);
-            avgCost += ms; avgCostCount++;
-            int elapsedTimeMS = (int)ms;
-            //int nextDelay = (timerRate>elapsedTimeMS) ? timerRate - elapsedTimeMS : 0;
-            //int nextDelay = 0;
-            System.out.println("Current: "+ms+" Avg: "+avgCost/avgCostCount);
-            //animationTimer.setDelay(nextDelay);
-            */
-         }
+            if (debug) System.out.println("End Animation");
+                setViewerDrivenPlay(false);
+            isViewerAnimating = false;
+            jMotionSlider.setEnabled(true);
+         } 
       }
    }
    
@@ -131,7 +147,7 @@ public class MotionControlJPanel extends javax.swing.JToolBar
 
       initComponents();
       rangeResolution = jMotionSlider.getMaximum(); // assume resolution was set up as max value of slider in form designer
-
+      smodel.addChangeListener(this);
       getMasterMotion().addChangeListener(this);
       jMotionSlider.addChangeListener(this);             // listen to changes in the slider itself.
       MotionsDB.getInstance().addObserver(this);
@@ -515,21 +531,31 @@ public class MotionControlJPanel extends javax.swing.JToolBar
    }//GEN-LAST:event_jBackButtonActionPerformed
    
    private void jPlayReverseButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jPlayReverseButtonActionPerformed
+      // if playing forward, stop first
+      if (jPlayButton.isSelected()){
+          jStopButtonActionPerformed(null);
+      }      
       if (animationTimer!=null){
          animationTimer.stop();
          animationTimer=null;
       }
+      jMotionSlider.setEnabled(false);
+      this.reverse=true;
+      jWrapToggleButton.setEnabled(!this.reverse);
       if (isMotionLoaded() && animationTimer==null){
           if (getMasterMotion().finished(-1)){
               // reset motion if at end already
               getMasterMotion().setTime(getMasterMotion().getEndTime());
           }
-          int timerRate = ViewDB.getInstance().getFrameTime();
-          animationTimer = new Timer(timerRate, new RealTimePlayActionListener(-1));
+          int frameFPS = ViewDB.getInstance().getFrameRate();
+          int frameTimeInMS = 1000/frameFPS;
+          animationTimer = new Timer(frameTimeInMS, new RealTimePlayActionListener(-1));
           animationTimer.start();
           // correct selected modes
           deselectPlaybackButtons();
           jReverseButton.setSelected(true);
+          masterMotion.setWrapMotion(false);
+          jWrapToggleButton.setSelected(false);
       }
    }//GEN-LAST:event_jPlayReverseButtonActionPerformed
    
@@ -540,6 +566,11 @@ public class MotionControlJPanel extends javax.swing.JToolBar
           // correct selected modes
           deselectPlaybackButtons();
           jStopButton.setSelected(true);
+          ViewDB.getInstance().endAnimation();
+          setViewerDrivenPlay(false);
+          jPlayButton.setEnabled(true);
+          jReverseButton.setEnabled(true);
+          jMotionSlider.setEnabled(true);
        }
     }//GEN-LAST:event_jStopButtonActionPerformed
     
@@ -555,21 +586,55 @@ public class MotionControlJPanel extends javax.swing.JToolBar
           jStopButtonActionPerformed(evt);
        }
     }//GEN-LAST:event_jAdvanceButtonActionPerformed
+    // Entry point to trigger play of animation from viewer
+    public void startViewerRecording() {
+        if (animationTimer!= null)
+            animationTimer.stop();
+        animationTimer=null;
+        setViewerDrivenPlay(true);
+        // Turn off looping and disable controls, also set time to start
+        masterMotion.setWrapMotion(false);
+        jWrapToggleButton.setSelected(false);
+        disableComponents();
+        masterMotion.setTime(masterMotion.getStartTime());
+        // Playing is controlled by recording, so don't play
+        //jPlayButtonActionPerformed(null);
+        isViewerAnimating = true;
+    }
     
+    public void endViewerRecording() {
+        setViewerDrivenPlay(false);
+        enableComponents();
+        // Playing is controlled by recording, so don't play
+        //jPlayButtonActionPerformed(null);
+        isViewerAnimating = false;        
+    }
+    
+    public void setTimeNoRender(double animationTime) {
+        getMasterMotion().setTimeNoRender(animationTime);
+    }
     private void jPlayButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jPlayButtonActionPerformed
+      // if playing reverse, stop first
+      if (jReverseButton.isSelected()){
+          jStopButtonActionPerformed(null);
+      }
+      jMotionSlider.setEnabled(false);
       if (animationTimer!=null){
          animationTimer.stop();
          animationTimer=null;
       }
+      this.reverse=false;
+      jWrapToggleButton.setEnabled(!this.reverse);
+      int timerRate = ViewDB.getInstance().getFrameRate();
       if (isMotionLoaded() && animationTimer==null){
           if (getMasterMotion().finished(1)){
               // reset motion if at end already
               getMasterMotion().setTime(getMasterMotion().getStartTime());
           }
-          ViewDB.getInstance().startAnimation();
-          int timerRate = ViewDB.getInstance().getFrameTime();
+          int delayMS = 1000/timerRate;
 
-          animationTimer = new Timer(timerRate, new RealTimePlayActionListener(1));
+          //if (delayMS < 16) delayMS = 16; // 60 fps no faster
+          animationTimer = new Timer(delayMS, new RealTimePlayActionListener(1));
           animationTimer.start();
           // correct selected modes
           deselectPlaybackButtons();
@@ -577,10 +642,25 @@ public class MotionControlJPanel extends javax.swing.JToolBar
       }
     }//GEN-LAST:event_jPlayButtonActionPerformed
     
+    public double getSpeed() {
+       return ((Double)smodel.getValue());
+    }
+    
+    public void playCurrentMotion(int stepInMS) {
+        if (debug) System.out.println("playCurrentMotion, setting rate to "+stepInMS);
+        TheApp.getCurrentVersionPreferences().put("Internal.FrameRate", String.valueOf(stepInMS));
+        jPlayButtonActionPerformed(null);
+    }
     
     public void stateChanged(ChangeEvent e) 
     {
        if (isMotionLoaded()){
+          if (e.getSource().equals(smodel)){
+              // Speed change, propagate to viewer and return
+              //System.out.println("Speed changed");
+              ViewDB.getInstance().sendAnimationSpeed();
+              return;
+          }
           if (e.getSource().equals(getMasterMotion()) && !internalTrigger){
              internalTrigger=true;
              jMotionSlider.setValue(getSliderValueForTime(getMasterMotion().getCurrentTime()));
@@ -588,9 +668,11 @@ public class MotionControlJPanel extends javax.swing.JToolBar
              setTimeTextField(getMasterMotion().getCurrentTime());
           } else if (e.getSource().equals(jMotionSlider) && !internalTrigger){
              internalTrigger=true;
+             ViewDB.getInstance().setScrubbing(true);
              getMasterMotion().setTime(getTimeForSliderValue(jMotionSlider.getValue()));
              internalTrigger=false;
              setTimeTextField(getMasterMotion().getCurrentTime());
+             ViewDB.getInstance().setScrubbing(false);
           }
        }
     }
@@ -678,18 +760,26 @@ public class MotionControlJPanel extends javax.swing.JToolBar
             // Current motion changed.  Update master motion
             double currentTime = getMasterMotion().getCurrentTime();
             getMasterMotion().clear();
+            JSONArray clipUUIDs = new JSONArray(); 
             for(int i=0; i<mdb.getNumCurrentMotions(); i++){
                getMasterMotion().add(mdb.getCurrentMotion(i));
                ModelMotionPair currentModelMotionPair = mdb.getCurrentMotion(i);
                Storage mot = currentModelMotionPair.motion;
                MotionsDB.getInstance().getDisplayerForMotion(mot).setupMotionDisplay();
+               clipUUIDs.add(MotionsDB.getInstance().getDisplayerForMotion(mot).getAnimationClipUUID());
                //
                ArrayList<MotionDisplayer> associatedDisplayers = MotionsDB.getInstance().getDisplayerForMotion(mot).getAssociatedMotions();
                // Find associated motions as well and re-associate them
-               for (int j=0; j<associatedDisplayers.size(); j++)
+               for (int j=0; j<associatedDisplayers.size(); j++){
                    associatedDisplayers.get(j).setupMotionDisplay();
+                   clipUUIDs.add(associatedDisplayers.get(j).getAnimationClipUUID());
+               }
             }
             getMasterMotion().setTime(currentTime);
+            JSONObject jsonMessage = new JSONObject();
+            jsonMessage.put("Op", "SetCurrentAnimations");
+            jsonMessage.put("clip_list", clipUUIDs);
+            ViewDB.getInstance().sendVisualizerCommand(jsonMessage);
             
          } else if (evt.getOperation() == Operation.Modified) {
             Storage motion = evt.getMotion();
@@ -706,11 +796,37 @@ public class MotionControlJPanel extends javax.swing.JToolBar
          } else if (evt.getOperation() == Operation.Assoc) {
              // Create MotionDisplayer and associate it to that of currentMotion
              MotionDisplayer newMotionDisplayer = new MotionDisplayer(evt.getMotion(), evt.getModel());
+             // add uuid to current animations
              MotionsDB.getInstance().addMotionDisplayer(evt.getMotion(), newMotionDisplayer);
-             getMasterMotion().getDisplayer(0).getAssociatedMotions().add(newMotionDisplayer);
-             newMotionDisplayer.setupMotionDisplay();
-             getMasterMotion().setTime(getMasterMotion().getCurrentTime());
-
+             getMasterMotion().getDisplayer(0).associateDisplayer(newMotionDisplayer);
+             // send clip to viewer
+            String animationUUID = newMotionDisplayer.getAnimationClipUUID();
+            ModelVisualizationJson modelViz = ViewDB.getInstance().getModelVisualizationJson(evt.getModel());
+            JSONObject currentAnimation = new JSONObject();
+            currentAnimation.put("Clip", newMotionDisplayer.getAnimationClip());
+            currentAnimation.put("Root", modelViz.getModelUUID().toString());
+            currentAnimation.put("Op", "AddAnimationClip");
+            ViewDB.getInstance().sendAnimationClip(currentAnimation);
+            newMotionDisplayer.setupMotionDisplay();
+            getMasterMotion().setTime(getMasterMotion().getCurrentTime());
+            // Update current animation
+            JSONArray clipUUIDs = new JSONArray(); 
+            for(int i=0; i<mdb.getNumCurrentMotions(); i++){
+               ModelMotionPair currentModelMotionPair = mdb.getCurrentMotion(i);
+               Storage mot = currentModelMotionPair.motion;
+               clipUUIDs.add(MotionsDB.getInstance().getDisplayerForMotion(mot).getAnimationClipUUID());
+               // collect ids of current motions and send to viewer
+               ArrayList<MotionDisplayer> associatedDisplayers = MotionsDB.getInstance().getDisplayerForMotion(mot).getAssociatedMotions();
+               // Find associated motions as well and re-associate them
+               for (int j=0; j<associatedDisplayers.size(); j++){
+                   associatedDisplayers.get(j).setupMotionDisplay();
+                   clipUUIDs.add(associatedDisplayers.get(j).getAnimationClipUUID());
+               }
+            }
+            JSONObject jsonMessage = new JSONObject();
+            jsonMessage.put("Op", "SetCurrentAnimations");
+            jsonMessage.put("clip_list", clipUUIDs);
+            ViewDB.getInstance().sendVisualizerCommand(jsonMessage);
          }
          motionLoaded = (getMasterMotion().getNumMotions() > 0);
          updatePanelDisplay();
@@ -806,6 +922,7 @@ public class MotionControlJPanel extends javax.swing.JToolBar
         return masterMotion;
     }
     
+    private boolean reverse = false;
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jAdvanceButton;
     private javax.swing.JButton jBackButton;
@@ -826,5 +943,12 @@ public class MotionControlJPanel extends javax.swing.JToolBar
     private javax.swing.JTextField jTimeTextField;
     private javax.swing.JToggleButton jWrapToggleButton;
     // End of variables declaration//GEN-END:variables
+
+    /**
+     * @return the reverse
+     */
+    public boolean isReverse() {
+        return reverse;
+    }
 
 }

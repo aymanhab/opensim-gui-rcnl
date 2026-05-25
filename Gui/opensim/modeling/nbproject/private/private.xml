@@ -3,10 +3,6 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/1"/>
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
-        <group>
-            <file>file:/D:/src/rice/opensim-gui-rcnl/Gui/opensim/modeling/src/org/opensim/modeling/OpenSimObject.java</file>
-            <file>file:/D:/src/rice/opensim-gui-rcnl/Gui/opensim/modeling/src/org/opensim/modeling/JointList.java</file>
-            <file>file:/D:/src/rice/opensim-gui-rcnl/Gui/opensim/modeling/src/org/opensim/modeling/JointIterator.java</file>
-        </group>
+        <group/>
     </open-files>
 </project-private>

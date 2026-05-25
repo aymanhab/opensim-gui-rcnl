@@ -4,6 +4,19 @@ GitHub issues or pull requests that
 are related to the items below. If there is no issue or pull
 request related to the change, then we may provide the commit.
 
+v4.6
+======
+- Fix issue [#1494](https://github.com/opensim-org/opensim-gui/issues/1494): Changing muscle path color throws exception.
+- Fix issue [#1493](https://github.com/opensim-org/opensim-gui/issues/1493): Rotating experimental data fails or results an unusable file.
+- Fix issue [#1516](https://github.com/opensim-org/opensim-gui/issues/1516): Chains of Physical offset frames ignored when displaying GeometryPath
+- Fix issue [#1519](https://github.com/opensim-org/opensim-gui/issues/1519): Exception thrown when browsing for output folder in Inverse Dynamics Tool dialog
+- Fix issue [#1526](https://github.com/opensim-org/opensim-gui/issues/1526): Handle very long frame names by showing as tooltips in path editor.
+- Fix issue [#1480](https://github.com/opensim-org/opensim-gui/issues/1480): Unchecking the box to use controls in AnalyzeTool doesn't work.
+- Upgrade Viewer to a react application using threejs as a module/library, rewrite of viewing functionality
+- Fix issue [#1555](https://github.com/opensim-org/opensim-gui/issues/1555): Fix crash following use of the IMUInverseKinematicsTool in the GUI.
+- Visualizer has been rewritten as a React application in typescript using three.js as library (rev. 166) and r3f.
+
+
 v4.5
 ======
 - Fix issue [#1378](https://github.com/opensim-org/opensim-gui/issues/1378): In Static Optimization Tool, dialog box has wrong title for "Directory" in output section.
